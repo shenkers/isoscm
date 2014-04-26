@@ -21,8 +21,8 @@ import util.Util.MapCounter;
 public class ExonSpliceGraph {
 
 	public static class ConnectedComponentResult{
-		StrandedGenomicIntervalTree<Map<String, Object>> exons;
-		StrandedGenomicIntervalTree<Map<String, Object>> splice_junctions;
+		public StrandedGenomicIntervalTree<Map<String, Object>> exons;
+		public StrandedGenomicIntervalTree<Map<String, Object>> splice_junctions;
 
 		public ConnectedComponentResult(StrandedGenomicIntervalTree<Map<String, Object>> exons, StrandedGenomicIntervalTree<Map<String, Object>> splice_junctions) {
 			this.exons = exons;

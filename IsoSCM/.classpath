@@ -5,7 +5,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/Utils"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/itext"/>
 	<classpathentry kind="src" path="/Lai"/>
-	<classpathentry kind="src" path="/APADetect"/>
 	<classpathentry kind="lib" path="lib/colt.jar" sourcepath="lib-src/colt-src.jar"/>
 	<classpathentry kind="lib" path="lib/commons-math3-3.0.jar" sourcepath="lib-src/commons-math3-3.0-sources.jar"/>
 	<classpathentry kind="lib" path="lib/picard-1.106.jar" sourcepath="lib-src/picard-1.106-src.jar"/>
