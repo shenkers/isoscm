@@ -4,7 +4,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.math.MathException;
 import org.apache.commons.math3.special.Beta;
 import org.apache.commons.math3.special.Gamma;
 
@@ -481,7 +480,7 @@ public class BetaNegativeBinomial {
 		return Gamma.logGamma(r+x) - Gamma.logGamma(x+1) - Gamma.logGamma(r) + ((r)*Math.log(1-p)) + (x*Math.log(p));
 	}
 
-	public static void main(String[] args) throws MathException {
+	public static void main(String[] args) {
 	
 //		testFlyData();
 //				testRealData();
