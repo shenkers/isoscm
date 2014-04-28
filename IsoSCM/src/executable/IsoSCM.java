@@ -1,7 +1,6 @@
 package executable;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import multisample.JointSegmentation;
@@ -15,9 +14,9 @@ import processing.FindSpliceJunctions;
 import processing.SlidingWindow;
 import scm.IdentifyChangePoints;
 import splicegraph.ExonSpliceGraph;
-import tools.Strandedness;
 import tools.BEDTools.BEDWriter;
 import tools.GTFTools.GTFWriter;
+import tools.Strandedness;
 import util.IO;
 import util.Util;
 
@@ -28,12 +27,7 @@ import com.beust.jcommander.converters.DoubleConverter;
 import com.beust.jcommander.converters.FileConverter;
 import com.beust.jcommander.converters.IntegerConverter;
 
-public class Main {
-	enum FileType {}
-	
-	public static File getFile(FileType type, File dir, String base){
-		return dir;
-	}
+public class IsoSCM {
 
 	public static void main(String[] args) throws IOException {
 		class AssembleCommand{	
