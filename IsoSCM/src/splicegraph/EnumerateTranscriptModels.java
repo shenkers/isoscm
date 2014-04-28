@@ -12,110 +12,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import processing.FindSpliceJunctions;
 import net.sf.samtools.Cigar;
 import net.sf.samtools.CigarElement;
 import net.sf.samtools.CigarOperator;
 import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMRecord;
 import net.sf.samtools.SAMRecordIterator;
+import processing.FindSpliceJunctions;
 import tools.AnnotatedRegion;
+import tools.BEDTools.BEDWriter;
 import tools.GenomicIntervalSet;
-import tools.GenomicIntervalTree;
+import tools.ParseBed.BEDIterator;
 import tools.StrandedGenomicIntervalSet;
 import tools.StrandedGenomicIntervalTree;
-import tools.BEDTools.BEDWriter;
-import tools.ParseBed.BEDIterator;
-import tools.ParseGTF.TranscriptIterator;
-import tools.StrandedGenomicPositionTree;
 import util.Util;
 import util.Util.MapCounter;
 
 public class EnumerateTranscriptModels {
 
-	public static GenomicIntervalTree<Map<String,Object>> intervals(String gtf) throws FileNotFoundException {
-		StrandedGenomicIntervalTree<Map<String,Object>> git = new StrandedGenomicIntervalTree<Map<String,Object>>();
-		GenomicIntervalTree<Map<String,Object>> git2 = new GenomicIntervalTree<Map<String,Object>>();
-
-		TranscriptIterator ti = new TranscriptIterator(gtf);
-
-		for(AnnotatedRegion r : ti){
-			boolean isAdded=false;
-			for(AnnotatedRegion added : git.overlappingRegions(r.chr, r.start, r.end,r.strand)){
-
-				isAdded |= r.start== added.start && r.end ==added.end;
-
-			}
-
-			if(!isAdded){
-				git.add(r.chr, r.start, r.end,r.strand);
-				System.out.println(r);
-			}
-		}
-
-		for(AnnotatedRegion r : git){
-			if(r.strand=='+'){
-				boolean containsAntisense = false;
-				for(AnnotatedRegion added : git.overlappingRegions(r.chr, r.start, r.end,r.isNegativeStrand()?'+':'-')){
-					containsAntisense |= r.start== added.start && r.end ==added.end;
-				}
-				if(containsAntisense)
-					git2.add(r.chr, r.start, r.end);
-			}
-		}
-
-		// find those that are on both strands,
-		// delete them, those that remain are those that are only on one strand.
-		// for each of these, assign them to the closest up/down-stream segment boundary.
-
-		StrandedGenomicPositionTree segmentBoundaries = new StrandedGenomicPositionTree();
-
-		for(AnnotatedRegion r : git2){
-			segmentBoundaries.add(r.chr, r.start, '+');
-			segmentBoundaries.add(r.chr, r.end, '-');
-			for(char strand : Util.list('+','-'))
-				git.remove(r.chr, r.start, r.end, strand);
-		}
-
-
-
-		for(AnnotatedRegion r : git){
-			segmentBoundaries.add(r.chr, r.get5Prime(), r.strand);
-
-			//			System.out.println(r);
-		}
-
-		for(AnnotatedRegion r : git){
-			AnnotatedRegion closest = segmentBoundaries.getClosestUpstream(r.chr, r.get3Prime(), r.isNegativeStrand()?'+':'-');
-			//			System.out.println(r);
-			//			System.out.printf("\t%s\n", closest);
-			if(closest!=null){
-
-				boolean isAdded=false;
-				for(AnnotatedRegion added : git2.overlappingRegions(r.chr, Math.min(r.start,closest.start), Math.max(r.end,closest.end))){
-
-					isAdded |= Math.min(r.start,closest.start) == added.start && Math.max(r.end,closest.end) == added.end;
-
-				}
-
-				if(!isAdded){
-					System.out.printf("(%s,%s)\t%s:%d-%d\n",r,closest,r.chr,Math.min(r.start,closest.start), Math.max(r.end,closest.end));
-
-					git2.add(r.chr, Math.min(r.start,closest.start), Math.max(r.end,closest.end));
-				}
-			}
-		}
-
-		BEDWriter bw = new BEDWriter("test3.bed");
-		for(AnnotatedRegion r : git2){
-			bw.write(r.chr, r.start, r.end, '.');
-		}
-		bw.close();
-
-
-		return git2;
-	}
-
+	
 	public static void filterRegion(String chr, int start, int end, String segmentationBed) throws FileNotFoundException{
 		BEDIterator bi = new BEDIterator("test3.bed");
 		BEDWriter bw = new BEDWriter(segmentationBed);

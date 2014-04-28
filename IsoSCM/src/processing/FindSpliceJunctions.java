@@ -7,39 +7,33 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.math3.special.Beta;
-
-import filter.ComposableFilter;
-import filter.ConsumingReadFilter;
-import filter.Counter;
-import filter.Echo;
-import filter.MismatchFilter;
-import filter.MultiMappingfilter;
-import filter.SAMRecordStrandednessFilter;
-import filter.Transformer;
 import net.sf.samtools.Cigar;
 import net.sf.samtools.CigarElement;
 import net.sf.samtools.CigarOperator;
 import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMRecord;
 import net.sf.samtools.SAMRecordIterator;
-import net.sf.samtools.SAMRecord.SAMTagAndValue;
+
+import org.apache.commons.math3.special.Beta;
+
 import tools.AnnotatedRegion;
 import tools.BAMTools;
-import tools.GenomicIntervalSet;
+import tools.BEDTools.BEDWriter;
+import tools.GTFTools.GTFWriter;
 import tools.IntervalTools;
+import tools.ParseBed.BEDIterator;
+import tools.ParseGTF.TranscriptIterator;
 import tools.StrandedGenomicIntervalSet;
 import tools.StrandedGenomicIntervalTree;
 import tools.Strandedness;
-import tools.BEDTools.BEDWriter;
-import tools.GTFTools.GTFWriter;
-import tools.ParseBed.BEDIterator;
-import tools.ParseGTF.TranscriptIterator;
 import util.Util;
-import util.Util.Criteria;
 import util.Util.ExtremeObjectTracker;
 import util.Util.MapCounter;
-import util.Util.MapSet;
+import filter.ComposableFilter;
+import filter.ConsumingReadFilter;
+import filter.Counter;
+import filter.MultiMappingfilter;
+import filter.SAMRecordStrandednessFilter;
 
 public class FindSpliceJunctions {
 
