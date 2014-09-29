@@ -2,10 +2,14 @@ package splicegraph;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.PrintStream;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 import java.util.Stack;
 
 import tools.AnnotatedRegion;
@@ -14,6 +18,7 @@ import tools.IntervalTools;
 import tools.ParseGTF.TranscriptIterator;
 import tools.StrandedGenomicIntervalSet;
 import tools.StrandedGenomicIntervalTree;
+import util.IO;
 import util.Util;
 import util.Util.ExtremeTracker;
 import util.Util.MapCounter;
@@ -269,7 +274,7 @@ public class ExonSpliceGraph {
 
 	}  
 
-	public static void iterateSpliceIsoforms(File assembly_gtf, GTFWriter isoform_gtf) throws FileNotFoundException{
+	public static void iterateSpliceIsoforms(File assembly_gtf, GTFWriter isoform_gtf, PrintStream skipped, Integer max_paths) throws FileNotFoundException{
 		TranscriptIterator ti = new TranscriptIterator(assembly_gtf);
 
 		StrandedGenomicIntervalTree<Map<String, Object>> exon_5p = new StrandedGenomicIntervalTree<Map<String,Object>>();
@@ -294,9 +299,19 @@ public class ExonSpliceGraph {
 			}
 		}
 
+		Set<String> skipped_ids = new HashSet<String>();
 		for(AnnotatedRegion r : exon_5p){	
-			Stack<AnnotatedRegion> isoform_exons = new Stack<AnnotatedRegion>();
-			iterateIsoforms(isoform_count, isoform_exons, r, exon_3p, sj5p, isoform_gtf);
+			if(max_paths == null || countPaths(r, exon_3p, sj5p) < max_paths){
+				Stack<AnnotatedRegion> isoform_exons = new Stack<AnnotatedRegion>();
+				iterateIsoforms(isoform_count, isoform_exons, r, exon_3p, sj5p, isoform_gtf);
+			}
+			else{
+				String locus_id = (String) r.getAttribute("locus_id");
+				if(!skipped_ids.contains(locus_id)){
+				skipped.println(locus_id);
+				skipped_ids.add(locus_id);
+				}
+			}
 		}
 	}
 
@@ -342,10 +357,81 @@ public class ExonSpliceGraph {
 		isoform_exons.pop();
 	}
 
+	public static List<AnnotatedRegion> listChildren(AnnotatedRegion r, StrandedGenomicIntervalTree<Map<String,Object>> exon_3p, StrandedGenomicIntervalTree<Map<String,Object>> sj5p){
+		int p = IntervalTools.offsetPosition(r.get3Prime(), 1, r.isNegativeStrand(), false);
+		List<AnnotatedRegion> children = new LinkedList<AnnotatedRegion>();
+
+		for(AnnotatedRegion j : sj5p.overlappingRegions(r.chr, p, p, r.strand)){
+			int j3p = (Integer) j.getAttribute("sj3p");
+			int e3p = IntervalTools.offsetPosition(j3p, 1, j.isNegativeStrand(), false);
+			for(AnnotatedRegion e : IntervalTools.BoundaryIntervals(exon_3p, r.chr, e3p, j.strand, true)){
+				children.add(e);
+			}
+		}
+
+		return children;
+	}
+
+	public static Integer countPaths(AnnotatedRegion r, StrandedGenomicIntervalTree<Map<String, Object>> exon_3p, StrandedGenomicIntervalTree<Map<String, Object>> sj5p){
+		String path_att = "nPaths";
+		
+		Integer nPaths = (Integer) r.getAttribute(path_att);
+		
+		if(nPaths==null){
+			List<AnnotatedRegion> children = listChildren(r, exon_3p, sj5p);
+
+			if(children.size()==0){
+				nPaths=1;
+			}
+			else{
+				nPaths = 0;
+				for(AnnotatedRegion c : children){
+					nPaths += countPaths(c, exon_3p, sj5p);
+				}
+			}
+			
+			r.addAttribute(path_att, nPaths);
+		}
+
+		return nPaths;
+	}
+
+	public static void countSpliceIsoforms(File assembly_gtf) throws FileNotFoundException{
+		TranscriptIterator ti = new TranscriptIterator(assembly_gtf);
+
+		StrandedGenomicIntervalTree<Map<String, Object>> exon_5p = new StrandedGenomicIntervalTree<Map<String,Object>>();
+		StrandedGenomicIntervalTree<Map<String, Object>> exon_3p = new StrandedGenomicIntervalTree<Map<String,Object>>();
+		StrandedGenomicIntervalTree<Map<String, Object>> sj5p = new StrandedGenomicIntervalTree<Map<String,Object>>();
+
+		for(AnnotatedRegion r : ti){
+			if(r.annotation.equals("exon")){
+				if(r.getAttribute("type").equals("5p_exon")){
+					exon_5p.add(r.chr, r.start, r.end, r.strand, r.attributes);
+				}
+				else{
+					exon_3p.add(r.chr, r.start, r.end, r.strand, r.attributes);
+				}
+			}
+			if(r.annotation.equals("splice_jnct")){
+				Map<String,Object> attributes = r.attributes;
+				attributes.put("sj3p", r.get3Prime());
+				sj5p.add(r.chr, r.get5Prime(), r.get5Prime(), r.strand, attributes);
+			}
+		}
+
+		for(AnnotatedRegion r : exon_5p){	
+			int n = countPaths(r,exon_3p,sj5p);
+			System.out.printf("e5p %s %d\n", r,n);
+		}
+	}
+	
+	
 	public static void main(String[] args) throws FileNotFoundException {
+		
 		{
 			GTFWriter gw = new GTFWriter("/mnt/LaiLab/sol/mel_yak_vir/isoscm/M/MH.isoforms.gtf");
-			iterateSpliceIsoforms(new File("/mnt/LaiLab/sol/mel_yak_vir/isoscm/M/MH.coverage.gtf"),gw);
+			PrintStream out = IO.OutPrintstream("/dev/stdout", true);
+			iterateSpliceIsoforms(new File("/mnt/LaiLab/sol/mel_yak_vir/isoscm/M/MH.coverage.gtf"),gw,out,3);
 			gw.close();
 		}
 		
@@ -363,7 +449,10 @@ public class ExonSpliceGraph {
 		}
 		System.exit(0);
 		GTFWriter gw = new GTFWriter("/home/sol/workspace/IsoSCM/tests/gtf/SRR594393.25.isoforms.gtf");
-		iterateSpliceIsoforms(new File("/home/sol/workspace/IsoSCM/tests/gtf/SRR594393.25.gtf"),gw);
+		{
+			PrintStream out = IO.OutPrintstream("/dev/stdout", true);
+		iterateSpliceIsoforms(new File("/home/sol/workspace/IsoSCM/tests/gtf/SRR594393.25.gtf"),gw,out,null);
+		}
 		gw.close();
 		System.exit(0);
 

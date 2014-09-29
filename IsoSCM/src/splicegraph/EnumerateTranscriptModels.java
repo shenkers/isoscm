@@ -11,6 +11,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 
 import net.sf.samtools.Cigar;
 import net.sf.samtools.CigarElement;
@@ -21,8 +22,11 @@ import net.sf.samtools.SAMRecordIterator;
 import processing.FindSpliceJunctions;
 import tools.AnnotatedRegion;
 import tools.BEDTools.BEDWriter;
+import tools.GTFTools.GTFWriter;
 import tools.GenomicIntervalSet;
 import tools.ParseBed.BEDIterator;
+import tools.ParseGTF.TranscriptIterator;
+import tools.IntervalTools;
 import tools.StrandedGenomicIntervalSet;
 import tools.StrandedGenomicIntervalTree;
 import util.Util;
@@ -30,7 +34,7 @@ import util.Util.MapCounter;
 
 public class EnumerateTranscriptModels {
 
-	
+
 	public static void filterRegion(String chr, int start, int end, String segmentationBed) throws FileNotFoundException{
 		BEDIterator bi = new BEDIterator("test3.bed");
 		BEDWriter bw = new BEDWriter(segmentationBed);
@@ -368,8 +372,10 @@ public class EnumerateTranscriptModels {
 		//		}
 	}
 
+
 	public static void main(String[] args) throws FileNotFoundException {
 
+	
 		String loc = "chr1:183,269,781-183,413,660";
 		loc="chr1:134,869,918-134,928,273";
 		loc="chr1:120,176,951-120,213,058";

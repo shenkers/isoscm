@@ -2,6 +2,7 @@ package executable;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 
 import multisample.JointSegmentation;
 import net.sf.samtools.SAMFileReader;
@@ -33,7 +34,7 @@ public class IsoSCM {
 		class AssembleCommand{	
 			@Parameter(names="-bam", description="bam file to be segmented", converter=FileConverter.class)
 			File bam;
-			
+
 			@Parameter(names="-stringency", description="stringency for BAM format checking")
 			String stringency;
 
@@ -90,11 +91,11 @@ public class IsoSCM {
 			String filled_gap_segments;
 
 		}
-		
+
 		class SegmentCommand{	
 			@Parameter(names="-bam", description="bam file to be segmented", converter=FileConverter.class)
 			File bam;
-			
+
 			@Parameter(names="-s", description="the strandedness, can be \"reverse_forward\" or \"unstranded\"")
 			String strandedness;
 
@@ -142,9 +143,9 @@ public class IsoSCM {
 			String filled_gap_segments;
 
 		}
-		
+
 		class MultiSegmentCommand{	
-			
+
 			@Parameter(names="-bam1", description="bam from sample 1")
 			String bam1;
 
@@ -166,11 +167,23 @@ public class IsoSCM {
 			@Parameter(names="-dir", description="The output directory for the assembly step")
 			public String dir;
 		}
-		
+
 		class ListCommand{	
-			
+
 			@Parameter(names="-pairfile", description="gtf from the pairwise analysis")
 			String pairfile;
+
+		}
+
+		class EnumerateCommand{	
+			@Parameter(names="-splicegraph", description="splice graph gtf from the assembly step")
+			File splicegraph;
+			
+			@Parameter(names="-max_isoforms", description="loci with more than this number of isoforms will be skipped", converter=IntegerConverter.class)
+			Integer max_paths;
+			
+			@Parameter(names="-base", description="splice isoforms will be written to [base].isoforms.gtf, skipped locus IDs of [base].skipped.txt")
+			String base;
 
 		}
 
@@ -183,12 +196,14 @@ public class IsoSCM {
 		SegmentCommand segment = new SegmentCommand();
 		MultiSegmentCommand compare = new MultiSegmentCommand();
 		ListCommand list = new ListCommand();
+		EnumerateCommand enumerate = new EnumerateCommand();
 		HelpCommand help = new HelpCommand();
 		jc.addCommand("assemble", assemble);
 		jc.addCommand("segment", segment);
-			jc.addCommand("compare", compare);
-		jc.addCommand("list", list);
-			jc.addCommand("-h", help);
+		jc.addCommand("compare", compare);
+		jc.addCommand("enumerate", enumerate);
+			jc.addCommand("list", list);
+		jc.addCommand("-h", help);
 		jc.parse(args);
 
 		if(jc.getParsedCommand()==null || jc.getParsedCommand().equals("-h")){
@@ -246,7 +261,7 @@ public class IsoSCM {
 					BEDWriter scaffolded_bw = new BEDWriter(IO.bufferedPrintstream(scaffolded_bed));
 					ClusterExpressedSegments.scaffoldSpannableRegions(segment_bed, matepair_bed, scaffolded_bw);
 					scaffolded_bw.close();
-//					scaffolded_bed.renameTo(segment_bed);
+					//					scaffolded_bed.renameTo(segment_bed);
 				}
 
 				//output models
@@ -272,7 +287,7 @@ public class IsoSCM {
 				File splice_junction_bed = FileUtils.getFile(tmp_dir,assemble.base+".sj.bed");
 				File splice_count_gtf = FileUtils.getFile(tmp_dir,assemble.base+".sj.counted.gtf");
 				File segment_bed = assemble.insert_size_quantile==null ? FileUtils.getFile(tmp_dir,assemble.base+".seg.bed") : FileUtils.getFile(tmp_dir,assemble.base+".scaffolded.bed");
-				
+
 				double jnct_alpha = assemble.jnct_alpha;
 
 
@@ -287,7 +302,7 @@ public class IsoSCM {
 				File changepoint_gtf = FileUtils.getFile(tmp_dir,assemble.base+".cp.gtf");
 				File filtered_changepoint_gtf = FileUtils.getFile(tmp_dir,assemble.base+".cp.filtered.gtf");
 				File changepoint_exon_gtf = FileUtils.getFile(tmp_dir,assemble.base+".cp_exon.gtf");
-				
+
 				Strandedness strandedness = Strandedness.valueOf(assemble.strandedness);
 
 				SAMFileReader.setDefaultValidationStringency(ValidationStringency.SILENT);
@@ -349,7 +364,7 @@ public class IsoSCM {
 				double p = assemble.segment_p;
 
 				int maxBins=20000;
-		
+
 				int binSize=assemble.w;
 				int minCP=0;
 				int minLength = binSize*2;
@@ -422,7 +437,7 @@ public class IsoSCM {
 				File splice_junction_bed = FileUtils.getFile(tmp_dir,segment.base+".sj.bed");
 				File splice_count_gtf = FileUtils.getFile(tmp_dir,segment.base+".sj.counted.gtf");
 				File segment_bed = !FileUtils.getFile(tmp_dir,segment.base+".scaffolded.bed").exists() ? FileUtils.getFile(tmp_dir,segment.base+".seg.bed") : FileUtils.getFile(tmp_dir,segment.base+".scaffolded.bed");
-				
+
 				double jnct_alpha = segment.jnct_alpha;
 
 
@@ -437,7 +452,7 @@ public class IsoSCM {
 				File changepoint_gtf = FileUtils.getFile(tmp_dir,segment.base+".cp.gtf");
 				File filtered_changepoint_gtf = FileUtils.getFile(tmp_dir,segment.base+".cp.filtered.gtf");
 				File changepoint_exon_gtf = FileUtils.getFile(tmp_dir,segment.base+".cp_exon.gtf");
-				
+
 				Strandedness strandedness = Strandedness.valueOf(segment.strandedness);
 
 				SAMFileReader.setDefaultValidationStringency(ValidationStringency.SILENT);
@@ -499,7 +514,7 @@ public class IsoSCM {
 				double p = segment.segment_p;
 
 				int maxBins=20000;
-		
+
 				int binSize=segment.w;
 				int minCP=0;
 				int minLength = binSize*2;
@@ -558,6 +573,13 @@ public class IsoSCM {
 		}
 		else if(jc.getParsedCommand().equals("list")){
 			JointSegmentation.identifyBypassedRegions(new File(list.pairfile));	
+		}
+		else if(jc.getParsedCommand().equals("enumerate")){
+			GTFWriter gw = new GTFWriter(IO.bufferedPrintstream(Util.sprintf("%s.isoforms.gtf", enumerate.base)));
+			PrintStream skipped = IO.bufferedPrintstream(Util.sprintf("%s.skipped.txt", enumerate.base));
+			splicegraph.ExonSpliceGraph.iterateSpliceIsoforms(enumerate.splicegraph,gw,skipped,enumerate.max_paths);
+			gw.close();
+			skipped.close();
 		}
 	}
 }
