@@ -3,6 +3,7 @@ package multisample;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -21,8 +22,10 @@ import tools.ParseGTF.TranscriptIterator;
 import tools.StrandedGenomicIntervalSet;
 import tools.StrandedGenomicIntervalTree;
 import tools.Strandedness;
+import util.IO;
 import util.Util;
 import util.Util.Function;
+import changepoint.ChangePoint;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -49,6 +52,10 @@ public class JointSegmentation {
 
 		double min_fold=.6;
 
+		String[] ids = new String[]{
+				id1,
+				id2
+		};
 		SAMFileReader[] sfrs = new SAMFileReader[]{
 				new SAMFileReader(new File(bam1)),
 				new SAMFileReader(new File(bam2)),
@@ -77,7 +84,7 @@ public class JointSegmentation {
 					//System.out.println(u);
 					//				else if("3p_exon".equals(type)){
 					boolean constrained_decreasing = !u.isNegativeStrand();
-					StrandedGenomicIntervalTree<Map<String, Object>> msr = IdentifyChangePoints.identifyConstrainedNegativeBinomialPoints(sfrs, u.chr, u.start, u.end, maxBins, binSize, minCP, strandedness, u.isNegativeStrand(), alpha_0, beta_0, nb_r, r, p, constrained_decreasing, min_fold);
+					StrandedGenomicIntervalTree<Map<String, Object>> msr = null;//IdentifyChangePoints.identifyConstrainedNegativeBinomialPoints(ids, sfrs, u.chr, u.start, u.end, maxBins, binSize, minCP, strandedness, u.isNegativeStrand(), alpha_0, beta_0, nb_r, r, p, constrained_decreasing, min_fold);
 
 					// write the union exon
 					for(AnnotatedRegion cp : msr){
@@ -98,7 +105,7 @@ public class JointSegmentation {
 
 	}
 	
-	public static void performJointSegmentation(String id1, String id2, String exons1, String exons2, String bam1, String bam2, String outFile, Strandedness strandedness) throws FileNotFoundException {
+	public static void performJointSegmentation(String id1, String id2, String exons1, String exons2, String bam1, String bam2, String outTabularFile, String outGtfFile, Strandedness strandedness) throws FileNotFoundException {
 
 		StrandedGenomicIntervalTree<Map<String,Object>> isoscm1 = IntervalTools.buildRegionsTree(new TranscriptIterator(new File(exons1)), true, true, true);
 		StrandedGenomicIntervalTree<Map<String,Object>> isoscm2 = IntervalTools.buildRegionsTree(new TranscriptIterator(new File(exons2)), true, true, true);
@@ -126,13 +133,19 @@ public class JointSegmentation {
 		double min_fold=.6;
 
 		SAMFileReader.setDefaultValidationStringency(ValidationStringency.SILENT);
+		String[] ids = new String[]{
+				id1,
+				id2
+		};
 		SAMFileReader[] sfrs = new SAMFileReader[]{
 				new SAMFileReader(new File(bam1)),
 				new SAMFileReader(new File(bam2)),
 		}; 
 
-		GTFWriter gw = new GTFWriter(outFile);
-		int id=0;
+		GTFWriter gw = new GTFWriter(outGtfFile);
+		PrintStream tabular = IO.bufferedPrintstream(outTabularFile);
+		tabular.printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", "samples","locus_id","changepoint","upstream_segment","downstream_segment","locus","strand","upstream_cov","downstream_cov","site_usage","differential_usage");
+		int changepoint_id=0;
 		for(AnnotatedRegion region : t5p){
 			//				if(!region.chr.equals("10") || !IntervalTools.isContained(region.start, region.end, 95541467, 95545255))
 			//					continue;
@@ -155,24 +168,38 @@ public class JointSegmentation {
 				IntervalTools.addRegions(union, iso_ends2);
 				for(AnnotatedRegion u : union){
 					Map<String,Object> attributes = new HashMap<String, Object>();
-					String ID = Util.sprintf("%09d", id);
-					attributes.put("id", ID);
-					id++;
+					String locus_ID = Util.sprintf("%09d", changepoint_id);
+					attributes.put("id", locus_ID);
+					changepoint_id++;
 					gw.write("locus", u.chr, u.start, u.end, u.strand, AnnotatedRegion.GTFAttributeString(attributes));
 					//System.out.println(u);
 					//				else if("3p_exon".equals(type)){
 					boolean constrained_decreasing = !u.isNegativeStrand();
-					StrandedGenomicIntervalTree<Map<String, Object>> msr = IdentifyChangePoints.identifyConstrainedNegativeBinomialPoints(sfrs, u.chr, u.start, u.end, maxBins, binSize, minCP, strandedness, u.isNegativeStrand(), alpha_0, beta_0, nb_r, r, p, constrained_decreasing, min_fold);
+//					2R:454973-454973
+					 
+					List<ChangePoint> changepoints = IdentifyChangePoints.identifyConstrainedNegativeBinomialPoints(ids,sfrs, u.chr, u.start, u.end, maxBins, binSize, minCP, strandedness, u.isNegativeStrand(), alpha_0, beta_0, nb_r, r, p, constrained_decreasing, min_fold);
 
 					// write the union exon
-					for(AnnotatedRegion cp : msr){
-						cp.addAttribute("s1", id1);
-						cp.addAttribute("s2", id2);
-						cp.addAttribute("before_mle", StringUtils.join(Util.list(cp.getAttribute("before_mle")),","));
-						cp.addAttribute("after_mle", StringUtils.join(Util.list(cp.getAttribute("after_mle")),","));
-						cp.addAttribute("id", ID);
-						gw.write("changepoint", u.chr, cp.start, cp.end, u.strand, AnnotatedRegion.GTFAttributeString(cp.attributes));
+					for(ChangePoint cp : changepoints){
+						AnnotatedRegion changepoint = new AnnotatedRegion("changepoint", cp.pos.chr, cp.pos.start, cp.pos.end, cp.pos.strand, new HashMap<String, Object>());
+						changepoint.addAttribute("s1", id1);
+						changepoint.addAttribute("s2", id2);
+						changepoint.addAttribute("before_mle", StringUtils.join(Util.list(changepoint.getAttribute("before_mle")),","));
+						changepoint.addAttribute("after_mle", StringUtils.join(Util.list(changepoint.getAttribute("after_mle")),","));
+						changepoint.addAttribute("cov_upstream", StringUtils.join(Util.list(cp.cov_upstream),","));
+						changepoint.addAttribute("cov_downstream", StringUtils.join(Util.list(cp.cov_downstream),","));
+						changepoint.addAttribute("id", locus_ID);
+						gw.write("changepoint", u.chr, changepoint.start, changepoint.end, u.strand, AnnotatedRegion.GTFAttributeString(changepoint.attributes));
+						
+						
+						double[] usage = new double[sfrs.length];
+						for (int i = 0; i < sfrs.length; i++) {
+							usage[i] = 1-(cp.cov_downstream[i]/cp.cov_upstream[i]);
+						}
+						
 						// write all change points, we'll filter out later when we decide on parameters...
+						tabular.printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", StringUtils.join(ids,","),locus_ID,changepoint,cp.upstream_region,cp.downstream_region,u,cp.pos.strand,StringUtils.join(Util.list(cp.cov_upstream),","),StringUtils.join(Util.list(cp.cov_downstream),","),StringUtils.join(Util.list(usage),","),usage[0]-usage[1]);
+						
 					}
 
 				}
@@ -180,7 +207,7 @@ public class JointSegmentation {
 		}
 
 		gw.close();
-
+		tabular.close();
 	}
 
 	public static void identifyBypassedRegions(File f) throws IOException{
@@ -280,7 +307,7 @@ public class JointSegmentation {
 			jc.usage();
 		}
 		else if(jc.getParsedCommand().equals("compare")){
-			performJointSegmentation(compare.id1, compare.id2, compare.exons1, compare.exons2, compare.bam1, compare.bam2, compare.out, Strandedness.valueOf(compare.strandedness));	
+			performJointSegmentation(compare.id1, compare.id2, compare.exons1, compare.exons2, compare.bam1, compare.bam2, compare.out, null, Strandedness.valueOf(compare.strandedness));	
 		}
 		else if(jc.getParsedCommand().equals("list")){
 			identifyBypassedRegions(new File(list.pairfile));	

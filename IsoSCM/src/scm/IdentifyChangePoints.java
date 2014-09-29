@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -19,6 +20,7 @@ import net.sf.samtools.SAMFileReader;
 
 import org.apache.commons.math3.special.Beta;
 
+import changepoint.ChangePoint;
 import tools.AnnotatedRegion;
 import tools.BAMTools;
 import tools.GTFTools.GTFWriter;
@@ -311,7 +313,7 @@ public class IdentifyChangePoints {
 		}
 	}
 
-	public static StrandedGenomicIntervalTree<Map<String, Object>> identifyConstrainedNegativeBinomialPoints(SAMFileReader[] sfrs, String chr, int start, int end, int maxBins, int binSize, int minCP, Strandedness strandedness, boolean isNegativeStrand, double alpha_0, double beta_0, int nb_r, int r, double p, boolean constrain_decreasing, double min_fold){
+	public static List<ChangePoint> identifyConstrainedNegativeBinomialPoints(String[] ids, SAMFileReader[] sfrs, String chr, int start, int end, int maxBins, int binSize, int minCP, Strandedness strandedness, boolean isNegativeStrand, double alpha_0, double beta_0, int nb_r, int r, double p, boolean constrain_decreasing, double min_fold){
 
 
 		int l = end-start+1;
@@ -332,7 +334,7 @@ public class IdentifyChangePoints {
 		// cluster them, selecting the most likely from each cluster
 		// write change points to GTF
 
-		StrandedGenomicIntervalTree<Map<String,Object>> changePoints = new StrandedGenomicIntervalTree<Map<String,Object>>();
+		List<ChangePoint> changePoints = new LinkedList<ChangePoint>();
 
 
 
@@ -354,34 +356,50 @@ public class IdentifyChangePoints {
 			double[][] segment_mle = segmentation.segment_mle;
 			int[] changepoints = segmentation.change_point;
 
+			List<Integer> positions = new ArrayList<Integer>(segmentation.n_segments);
+			List<double[]> before_mles = new ArrayList<double[]>(segmentation.n_segments);
+			List<double[]> after_mles = new ArrayList<double[]>(segmentation.n_segments);
+			
+			
+			StrandedGenomicIntervalTree<Map<String,Object>> segments = new StrandedGenomicIntervalTree<Map<String,Object>>();
+			segments.add(chr,start,end,strand);
+			
 			for(int i=0 ; i<changepoints.length; i++){
 
 				int changepoint_i = changepoints[i];
-				// if it's an increase in coverage, the annotation should be shifted over by one bin
-				//				if(segment_mle[i]<segment_mle[i+1]){
-				//					changepoint_i++;					
-				//				}
 
 				if(changepoints[i] > minCP && changepoints[i] < nBins - minCP - 1){
 
 					int position = start + (changepoint_i*binSize) + (binSize/2);
 
-					//					if(!(segment_mle[i]>segment_mle[i+1] == constrain_decreasing))
-					//						throw new RuntimeException(Util.sprintf("Unexpected changepoint %s:%d:%c",chr,position,strand));
-
 					// make sure that the binning did not result in a cp outside of the queried segment
 					if(position >= start && position <= end){
-						Map<String,Object> attributes = new HashMap<String, Object>();
-						attributes.put("before_mle", segment_mle[i]);
-						attributes.put("after_mle", segment_mle[i+1]);
-						//						attributes.put("type","changepoint");
+						positions.add(position);
+						
+						before_mles.add(segment_mle[i]);
+						after_mles.add(segment_mle[i+1]);
 
-						changePoints.add(chr, position, position, strand, attributes);
-						// write each changepoint 
-						//						gw.write("exon",chr, position, position, strand, AnnotatedRegion.GTFAttributeString(attributes));
+						SegmentFragmenter.fragment(segments, chr, position, strand, isNegativeStrand);
 					}
 				}
 			}
+			
+			List<AnnotatedRegion> slist = new ArrayList<AnnotatedRegion>();
+			for(AnnotatedRegion s : segments){
+				slist.add(s);
+			}
+				
+			for(int i=0; i<positions.size(); i++){
+				AnnotatedRegion before = slist.get(i);
+				AnnotatedRegion after = slist.get(i+1);
+				AnnotatedRegion pos = new AnnotatedRegion("changepoint",chr,positions.get(i),positions.get(i),strand);
+				double[] before_mle = before_mles.get(i);
+				double[] after_mle = after_mles.get(i);
+				
+				changePoints.add(new ChangePoint(pos, isNegativeStrand?after:before, !isNegativeStrand?after:before, ids, isNegativeStrand?after_mle:before_mle, !isNegativeStrand?after_mle:before_mle));
+			}
+			
+			
 		}
 
 		return changePoints;

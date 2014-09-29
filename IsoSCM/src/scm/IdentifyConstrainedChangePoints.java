@@ -837,7 +837,8 @@ public class IdentifyConstrainedChangePoints {
 				 * the next segment is 0, 
 				 */
 
-				Boolean all_fail_constraint = true;
+				boolean all_decreasing = true;
+				boolean any_satisfy_fold = false;
 
 				double log_p_t_s = 0;
 
@@ -849,22 +850,26 @@ public class IdentifyConstrainedChangePoints {
 					//				if(map_mle[s+1].getMaxObject() > (segment_mle[t][s]+1) || map[s+1].getMax() == Double.NEGATIVE_INFINITY){
 					//				System.out.printf("(%d,%d) this %.2f next %.2f\n", t, s, segment_mle[t][s] , next_mle);
 
-					Boolean one_fails_constraint = null;
+					
+					Boolean satisfies_decreasing = null;
+					Boolean satisfies_fold = null;
 					if(constrain_decreasing){
 						double fold = next_mle/segment_mle[i][t][s];
-						one_fails_constraint = map_mle[i][s+1].getMaxObject() >= (segment_mle[i][t][s]) || fold > min_fold;
+						satisfies_fold = fold <= min_fold;
+						satisfies_decreasing = map_mle[i][s+1].getMaxObject() < (segment_mle[i][t][s]);
 					}
 					else{
 						double fold = segment_mle[i][t][s]/next_mle;
-						one_fails_constraint = map_mle[i][s+1].getMaxObject() <= (segment_mle[i][t][s]) || fold > min_fold;
+						satisfies_fold = fold <= min_fold;
+						satisfies_decreasing = map_mle[i][s+1].getMaxObject() > (segment_mle[i][t][s]);
 					}
-					all_fail_constraint &= one_fails_constraint;
-
+					all_decreasing &= satisfies_decreasing;
+					any_satisfy_fold |= satisfies_fold;
 				}
 
 				for(int i=0; i<y.length; i++){
 					double extreme = constrain_decreasing ? Math.max(map_mle[i][s+1].getMaxObject(),segment_mle[i][t][s]) : Math.min(map_mle[i][s+1].getMaxObject(),segment_mle[i][t][s]);
-					if(all_fail_constraint){
+						if(!(all_decreasing&&any_satisfy_fold)){
 						map_mle[i][t].put(extreme, Double.NEGATIVE_INFINITY);
 						nxt_mle[i][t].put(segment_mle[i][t][s], Double.NEGATIVE_INFINITY);
 					}
@@ -875,7 +880,7 @@ public class IdentifyConstrainedChangePoints {
 					}
 				}
 
-				if(all_fail_constraint){
+				if(!(all_decreasing&&any_satisfy_fold)){
 					map[t].put(s+1, Double.NEGATIVE_INFINITY);
 				}
 				else{

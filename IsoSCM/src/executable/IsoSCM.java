@@ -158,8 +158,8 @@ public class IsoSCM {
 			@Parameter(names="-base2", description="base id from the assembly step for sample 2")
 			String base2;
 
-			@Parameter(names="-out", description="gtf to which output will be written")
-			String out;
+			@Parameter(names="-out_base", description="output files will be written to [out_base].txt and [out_base].gtf")
+			String out_base;
 
 			@Parameter(names="-s", description="strandedness")
 			String strandedness;
@@ -191,6 +191,17 @@ public class IsoSCM {
 
 		}
 
+		args = new String[]{
+				"compare",
+				"-bam1", "/home/sol/lailab/sol/mel_yak_vir/total_rna/Y/H.bam",
+				"-bam2", "/home/sol/lailab/sol/mel_yak_vir/total_rna/Y/T.bam",
+				"-base1", "YH",
+				"-base2", "YT",
+				"-out_base", "/home/sol/Y.H.T",
+				"-s", "reverse_forward",
+				"-dir", "/home/sol/lailab/sol/mel_yak_vir/isoscm/Y/"
+				};
+		
 		JCommander jc = new JCommander();
 		AssembleCommand assemble = new AssembleCommand();
 		SegmentCommand segment = new SegmentCommand();
@@ -569,7 +580,7 @@ public class IsoSCM {
 		else if(jc.getParsedCommand().equals("compare")){
 			String spliced_exon_gtf1 = compare.dir+"/tmp/"+compare.base1+".exon.gtf";
 			String spliced_exon_gtf2 = compare.dir+"/tmp/"+compare.base2+".exon.gtf";			
-			JointSegmentation.performJointSegmentation(compare.base1, compare.base2, spliced_exon_gtf1, spliced_exon_gtf2, compare.bam1, compare.bam2, compare.out, Strandedness.valueOf(compare.strandedness));	
+			JointSegmentation.performJointSegmentation(compare.base1, compare.base2, spliced_exon_gtf1, spliced_exon_gtf2, compare.bam1, compare.bam2, Util.sprintf("%s.txt",compare.out_base), Util.sprintf("%s.gtf",compare.out_base), Strandedness.valueOf(compare.strandedness));	
 		}
 		else if(jc.getParsedCommand().equals("list")){
 			JointSegmentation.identifyBypassedRegions(new File(list.pairfile));	
