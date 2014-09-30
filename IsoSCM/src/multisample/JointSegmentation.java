@@ -105,33 +105,22 @@ public class JointSegmentation {
 
 	}
 	
-	public static void performJointSegmentation(String id1, String id2, File exons1, File exons2, File bam1, File bam2, File table, File gtf, Strandedness strandedness1, Strandedness strandedness2) throws FileNotFoundException {
+	public static void performJointSegmentation(String id1, String id2, File exons1, File exons2, File bam1, File bam2, File table, File gtf, Strandedness strandedness1, Strandedness strandedness2, int maxBins, int binSize, int minCP, double alpha_0, double beta_0, int nb_r, int r, double p, double min_fold) throws FileNotFoundException {
 
 		StrandedGenomicIntervalTree<Map<String,Object>> isoscm1 = IntervalTools.buildRegionsTree(new TranscriptIterator(exons1), true, true, true);
 		StrandedGenomicIntervalTree<Map<String,Object>> isoscm2 = IntervalTools.buildRegionsTree(new TranscriptIterator(exons2), true, true, true);
 
 		StrandedGenomicIntervalTree<Map<String,Object>> t5p = new StrandedGenomicIntervalTree<Map<String,Object>>();
 		for(StrandedGenomicIntervalTree<Map<String,Object>> isoscm : Util.list(isoscm1,isoscm2)){
-		for(AnnotatedRegion r : isoscm){
+		for(AnnotatedRegion exon : isoscm){
 //			System.out.println(r.toAttributeString());
-			if("3p_exon".equals(r.getAttribute("type"))){
-				if(!t5p.contains(r.chr, r.get5Prime(), r.get5Prime(), r.strand))
-					t5p.add(r.chr, r.get5Prime(), r.get5Prime(), r.strand);
+			if("3p_exon".equals(exon.getAttribute("type"))){
+				if(!t5p.contains(exon.chr, exon.get5Prime(), exon.get5Prime(), exon.strand))
+					t5p.add(exon.chr, exon.get5Prime(), exon.get5Prime(), exon.strand);
 			}
 		}
 		}
 		
-		int maxBins = 20000;
-		int binSize=10;
-		int minCP=0;
-		double alpha_0=1;
-		double beta_0=1; 
-		int nb_r=1; 
-		int r=10;
-		double p=.99;
-
-		double min_fold=.6;
-
 		SAMFileReader.setDefaultValidationStringency(ValidationStringency.SILENT);
 		String[] ids = new String[]{
 				id1,

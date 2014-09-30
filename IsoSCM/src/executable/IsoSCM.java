@@ -451,7 +451,17 @@ public class IsoSCM {
 			File table = FileUtils.getFile(compare.dir,Util.sprintf("%s.txt",compare.base));
 			File gtf = FileUtils.getFile(compare.dir,Util.sprintf("%s.gtf",compare.base));
 			
-			JointSegmentation.performJointSegmentation(assemblyConfiguration1.base, assemblyConfiguration2.base, spliced_exon_gtf1, spliced_exon_gtf2, assemblyConfiguration1.bam, assemblyConfiguration2.bam, table, gtf, Strandedness.valueOf(assemblyConfiguration1.strandedness), Strandedness.valueOf(assemblyConfiguration2.strandedness));	
+			int maxBins = 20000;
+			int binSize=assemblyConfiguration1.w;
+			int minCP=0;
+			double alpha_0=1;
+			double beta_0=1; 
+			int nb_r = assemblyConfiguration1.nb_r;
+			int r=assemblyConfiguration1.segment_r;
+			double p=assemblyConfiguration1.segment_p;
+			double min_fold=assemblyConfiguration1.min_fold;
+			
+			JointSegmentation.performJointSegmentation(assemblyConfiguration1.base, assemblyConfiguration2.base, spliced_exon_gtf1, spliced_exon_gtf2, assemblyConfiguration1.bam, assemblyConfiguration2.bam, table, gtf, Strandedness.valueOf(assemblyConfiguration1.strandedness), Strandedness.valueOf(assemblyConfiguration2.strandedness), maxBins, binSize, minCP, alpha_0, beta_0, nb_r, r, p, min_fold);	
 		}
 	}
 }
