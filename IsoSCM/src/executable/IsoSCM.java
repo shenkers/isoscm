@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 
+import javax.xml.bind.JAXBException;
+
 import multisample.JointSegmentation;
 import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMFileReader.ValidationStringency;
@@ -22,198 +24,37 @@ import util.IO;
 import util.Util;
 
 import com.beust.jcommander.JCommander;
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.converters.BooleanConverter;
-import com.beust.jcommander.converters.DoubleConverter;
-import com.beust.jcommander.converters.FileConverter;
-import com.beust.jcommander.converters.IntegerConverter;
 
 public class IsoSCM {
 
-	public static void main(String[] args) throws IOException {
-		class AssembleCommand{	
-			@Parameter(names="-bam", description="bam file to be segmented", converter=FileConverter.class)
-			File bam;
+	public static void main(String[] args) throws IOException, JAXBException {
 
-			@Parameter(names="-stringency", description="stringency for BAM format checking")
-			String stringency;
-
-			@Parameter(names="-t", description="the threshold above which a segment is considered expressed", converter=IntegerConverter.class)
-			int threshold=1;
-
-			@Parameter(names="-s", description="the strandedness, can be \"reverse_forward\" or \"unstranded\"")
-			String strandedness;
-
-			@Parameter(names="-dir", description="The output directory")
-			String dir = "isoscm";
-
-			@Parameter(names="-base", description="The output basename. This will be used as the prefix for output files.")
-			String base;
-
-			@Parameter(names="-insert_size_quantile", description="If the data is paired, will attempt to scaffold gaps between segments spanned by mates separated by this quantile")
-			Double insert_size_quantile;
-
-			@Parameter(names="-w", description="the width of window to be used by the SCM", converter=IntegerConverter.class)
-			int w = 20;
-
-			@Parameter(names="-segment_r", description="controls how long the fragments are", converter=IntegerConverter.class)
-			int segment_r = 10;
-
-			// can hide parameters by using hidden=true
-			@Parameter(names="-segment_p", description="controls how long the fragments are", converter=DoubleConverter.class)
-			double segment_p = 0.95;
-
-			@Parameter(names="-nb_r", description="controls expected noisy-ness of the data", converter=IntegerConverter.class)
-			int nb_r = 10;
-
-			@Parameter(names="-merge_radius", description="gaps smaller than this distance will be merged", converter=IntegerConverter.class)
-			int merge_radius = 100;
-
-			//			@Parameter(names="-max_cps", description="maximum number of changepoints allowed in a continuous segment", converter=IntegerConverter.class)
-			//			int max_cps;
-
-			@Parameter(names="-internal", description="whether or not to identify internal change points", converter=BooleanConverter.class)
-			boolean internal;
-
-			@Parameter(names="-coverage", description="whether or not to calculate coverage of resulting models", converter=BooleanConverter.class, arity=1)
-			boolean coverage=true;
-
-			@Parameter(names="-min_fold", description="the minimum fold change between neighboring segments expressed as a ratio of low/high, acceptable values in the range [0.0-1.0]", converter=DoubleConverter.class)
-			double min_fold = 0.5;
-
-			@Parameter(names="-min_terminal", description="terminal segments are \"virtually\" extended by this amount before segmentation", converter=IntegerConverter.class)
-			int min_terminal = 300;
-
-			@Parameter(names="-jnct_alpha", description="The significance level for binomial test to accept splice junction", converter=DoubleConverter.class)
-			double jnct_alpha = 0.05;
-
-			@Parameter(names="-merge_segments", description="Optional:bed file of regions to merge across")
-			String filled_gap_segments;
-
-		}
-
-		class SegmentCommand{	
-			@Parameter(names="-bam", description="bam file to be segmented", converter=FileConverter.class)
-			File bam;
-
-			@Parameter(names="-s", description="the strandedness, can be \"reverse_forward\" or \"unstranded\"")
-			String strandedness;
-
-			@Parameter(names="-dir", description="The output directory")
-			String dir = "isoscm";
-
-			@Parameter(names="-base", description="The output basename. This will be used as the prefix for output files.")
-			String base;
-
-			@Parameter(names="-w", description="the width of window to be used by the SCM", converter=IntegerConverter.class)
-			int w = 20;
-
-			@Parameter(names="-segment_r", description="controls how long the fragments are", converter=IntegerConverter.class)
-			int segment_r = 10;
-
-			// can hide parameters by using hidden=true
-			@Parameter(names="-segment_p", description="controls how long the fragments are", converter=DoubleConverter.class)
-			double segment_p = 0.95;
-
-			@Parameter(names="-nb_r", description="controls expected noisy-ness of the data", converter=IntegerConverter.class)
-			int nb_r = 10;
-
-			@Parameter(names="-merge_radius", description="gaps smaller than this distance will be merged", converter=IntegerConverter.class)
-			int merge_radius = 100;
-
-			//			@Parameter(names="-max_cps", description="maximum number of changepoints allowed in a continuous segment", converter=IntegerConverter.class)
-			//			int max_cps;
-
-			@Parameter(names="-internal", description="whether or not to identify internal change points", converter=BooleanConverter.class)
-			boolean internal;
-
-			@Parameter(names="-coverage", description="whether or not to calculate coverage of resulting models", converter=BooleanConverter.class, arity=1)
-			boolean coverage=true;
-
-			@Parameter(names="-min_fold", description="the minimum fold change between neighboring segments expressed as a ratio of low/high, acceptable values in the range [0.0-1.0]", converter=DoubleConverter.class)
-			double min_fold = 0.5;
-
-			@Parameter(names="-min_terminal", description="terminal segments are \"virtually\" extended by this amount before segmentation", converter=IntegerConverter.class)
-			int min_terminal = 300;
-
-			@Parameter(names="-jnct_alpha", description="The significance level for binomial test to accept splice junction", converter=DoubleConverter.class)
-			double jnct_alpha = 0.05;
-
-			@Parameter(names="-merge_segments", description="Optional:bed file of regions to merge across")
-			String filled_gap_segments;
-
-		}
-
-		class MultiSegmentCommand{	
-
-			@Parameter(names="-bam1", description="bam from sample 1")
-			String bam1;
-
-			@Parameter(names="-bam2", description="bam from sample 2")
-			String bam2;
-
-			@Parameter(names="-base1", description="base id from the assembly step for sample 1")
-			String base1;
-
-			@Parameter(names="-base2", description="base id from the assembly step for sample 2")
-			String base2;
-
-			@Parameter(names="-out_base", description="output files will be written to [out_base].txt and [out_base].gtf")
-			String out_base;
-
-			@Parameter(names="-s", description="strandedness")
-			String strandedness;
-
-			@Parameter(names="-dir", description="The output directory for the assembly step")
-			public String dir;
-		}
-
-		class ListCommand{	
-
-			@Parameter(names="-pairfile", description="gtf from the pairwise analysis")
-			String pairfile;
-
-		}
-
-		class EnumerateCommand{	
-			@Parameter(names="-splicegraph", description="splice graph gtf from the assembly step")
-			File splicegraph;
-			
-			@Parameter(names="-max_isoforms", description="loci with more than this number of isoforms will be skipped", converter=IntegerConverter.class)
-			Integer max_paths;
-			
-			@Parameter(names="-base", description="splice isoforms will be written to [base].isoforms.gtf, skipped locus IDs of [base].skipped.txt")
-			String base;
-
-		}
-
-		class HelpCommand{	
-
-		}
-
-		args = new String[]{
-				"compare",
-				"-bam1", "/home/sol/lailab/sol/mel_yak_vir/total_rna/Y/H.bam",
-				"-bam2", "/home/sol/lailab/sol/mel_yak_vir/total_rna/Y/T.bam",
-				"-base1", "YH",
-				"-base2", "YT",
-				"-out_base", "/home/sol/Y.H.T",
-				"-s", "reverse_forward",
-				"-dir", "/home/sol/lailab/sol/mel_yak_vir/isoscm/Y/"
-				};
 		
+//		args = new String[]{
+//				"assemble",
+//				"-bam", "/home/sol/lailab/sol/mel_yak_vir/total_rna/Y/H.bam",
+////				"-bam2", "/home/sol/lailab/sol/mel_yak_vir/total_rna/Y/T.bam",
+////				"-base1", "YH",
+////				"-base2", "YT",
+////				"-out_base", "/home/sol/Y.H.T",
+////				"-s", "reverse_forward",
+////				"-dir", "/home/sol/lailab/sol/mel_yak_vir/isoscm/Y/"
+//				};
+		
+		 
 		JCommander jc = new JCommander();
+		jc.setProgramName("java -jar IsoSCM.jar");
+		
 		AssembleCommand assemble = new AssembleCommand();
 		SegmentCommand segment = new SegmentCommand();
-		MultiSegmentCommand compare = new MultiSegmentCommand();
-		ListCommand list = new ListCommand();
+		CompareCommand compare = new CompareCommand();
 		EnumerateCommand enumerate = new EnumerateCommand();
 		HelpCommand help = new HelpCommand();
+		
 		jc.addCommand("assemble", assemble);
 		jc.addCommand("segment", segment);
 		jc.addCommand("compare", compare);
 		jc.addCommand("enumerate", enumerate);
-			jc.addCommand("list", list);
 		jc.addCommand("-h", help);
 		jc.parse(args);
 
@@ -221,10 +62,15 @@ public class IsoSCM {
 			jc.usage();
 		}
 		else if(jc.getParsedCommand().equals("assemble")){
+			File out_dir = assemble.dir;
+			if(!out_dir.exists())
+				out_dir.mkdirs();
+
+			File configuration_file = FileUtils.getFile(out_dir, Util.sprintf("%s.assembly_parameters.xml", assemble.base));
+			ConfigurationIO.writeConfiguration(assemble, configuration_file);
+			
 			//pre-process
 			{
-
-				File out_dir = new File(assemble.dir);
 
 				File bamFile = assemble.bam;
 
@@ -287,8 +133,6 @@ public class IsoSCM {
 					assembly_gtf.getParentFile().mkdirs();
 
 				File bamFile = assemble.bam;
-
-				File out_dir = new File(assemble.dir);
 
 				File tmp_dir = FileUtils.getFile(out_dir,"tmp");
 				if(!tmp_dir.exists())
@@ -574,23 +418,40 @@ public class IsoSCM {
 
 				//output models
 				sfr.close();
-
 			}
 		}
-		else if(jc.getParsedCommand().equals("compare")){
-			String spliced_exon_gtf1 = compare.dir+"/tmp/"+compare.base1+".exon.gtf";
-			String spliced_exon_gtf2 = compare.dir+"/tmp/"+compare.base2+".exon.gtf";			
-			JointSegmentation.performJointSegmentation(compare.base1, compare.base2, spliced_exon_gtf1, spliced_exon_gtf2, compare.bam1, compare.bam2, Util.sprintf("%s.txt",compare.out_base), Util.sprintf("%s.gtf",compare.out_base), Strandedness.valueOf(compare.strandedness));	
-		}
-		else if(jc.getParsedCommand().equals("list")){
-			JointSegmentation.identifyBypassedRegions(new File(list.pairfile));	
-		}
 		else if(jc.getParsedCommand().equals("enumerate")){
-			GTFWriter gw = new GTFWriter(IO.bufferedPrintstream(Util.sprintf("%s.isoforms.gtf", enumerate.base)));
-			PrintStream skipped = IO.bufferedPrintstream(Util.sprintf("%s.skipped.txt", enumerate.base));
-			splicegraph.ExonSpliceGraph.iterateSpliceIsoforms(enumerate.splicegraph,gw,skipped,enumerate.max_paths);
+			AssembleCommand assemblyConfiguration = ConfigurationIO.readAssemblyConfiguration(enumerate.assemblyXml);
+			
+			File out_dir = assemble.dir;
+			File configuration_xml = FileUtils.getFile(out_dir, Util.sprintf("%s.enumerate_parameters.xml", assemble.base));
+			ConfigurationIO.writeConfiguration(enumerate, configuration_xml);
+			
+			PrintStream gtfFile = IO.bufferedPrintstream(FileUtils.getFile(assemblyConfiguration.dir,Util.sprintf("%s.isoforms.gtf", assemblyConfiguration.base)));
+			PrintStream skipped = IO.bufferedPrintstream(FileUtils.getFile(assemblyConfiguration.dir,Util.sprintf("%s.skipped_loci.txt", assemblyConfiguration.base)));
+			File assembly_gtf = new File(Util.sprintf("%s/%s.gtf",assemblyConfiguration.dir, assemblyConfiguration.base));
+			GTFWriter gw = new GTFWriter(gtfFile);
+			splicegraph.ExonSpliceGraph.iterateSpliceIsoforms(assembly_gtf,gw,skipped,enumerate.max_paths);
 			gw.close();
 			skipped.close();
+		}
+		else if(jc.getParsedCommand().equals("compare")){
+			if(!compare.dir.exists())
+				compare.dir.mkdirs();
+			
+			File configuration_xml = FileUtils.getFile(compare.dir,Util.sprintf("%s.compare_parameters.xml", compare.base));
+			ConfigurationIO.writeConfiguration(compare, configuration_xml);
+			
+			AssembleCommand assemblyConfiguration1 = ConfigurationIO.readAssemblyConfiguration(compare.assemblyXml1);
+			AssembleCommand assemblyConfiguration2 = ConfigurationIO.readAssemblyConfiguration(compare.assemblyXml2);
+			
+			File spliced_exon_gtf1 = FileUtils.getFile(assemblyConfiguration1.dir,"tmp",assemblyConfiguration1.base+".exon.gtf");
+			File spliced_exon_gtf2 = FileUtils.getFile(assemblyConfiguration1.dir,"tmp",assemblyConfiguration1.base+".exon.gtf");
+			
+			File table = FileUtils.getFile(compare.dir,Util.sprintf("%s.txt",compare.base));
+			File gtf = FileUtils.getFile(compare.dir,Util.sprintf("%s.gtf",compare.base));
+			
+			JointSegmentation.performJointSegmentation(assemblyConfiguration1.base, assemblyConfiguration2.base, spliced_exon_gtf1, spliced_exon_gtf2, assemblyConfiguration1.bam, assemblyConfiguration2.bam, table, gtf, Strandedness.valueOf(assemblyConfiguration1.strandedness), Strandedness.valueOf(assemblyConfiguration2.strandedness));	
 		}
 	}
 }

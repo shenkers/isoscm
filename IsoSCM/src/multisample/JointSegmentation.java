@@ -105,10 +105,10 @@ public class JointSegmentation {
 
 	}
 	
-	public static void performJointSegmentation(String id1, String id2, String exons1, String exons2, String bam1, String bam2, String outTabularFile, String outGtfFile, Strandedness strandedness) throws FileNotFoundException {
+	public static void performJointSegmentation(String id1, String id2, File exons1, File exons2, File bam1, File bam2, File table, File gtf, Strandedness strandedness1, Strandedness strandedness2) throws FileNotFoundException {
 
-		StrandedGenomicIntervalTree<Map<String,Object>> isoscm1 = IntervalTools.buildRegionsTree(new TranscriptIterator(new File(exons1)), true, true, true);
-		StrandedGenomicIntervalTree<Map<String,Object>> isoscm2 = IntervalTools.buildRegionsTree(new TranscriptIterator(new File(exons2)), true, true, true);
+		StrandedGenomicIntervalTree<Map<String,Object>> isoscm1 = IntervalTools.buildRegionsTree(new TranscriptIterator(exons1), true, true, true);
+		StrandedGenomicIntervalTree<Map<String,Object>> isoscm2 = IntervalTools.buildRegionsTree(new TranscriptIterator(exons2), true, true, true);
 
 		StrandedGenomicIntervalTree<Map<String,Object>> t5p = new StrandedGenomicIntervalTree<Map<String,Object>>();
 		for(StrandedGenomicIntervalTree<Map<String,Object>> isoscm : Util.list(isoscm1,isoscm2)){
@@ -138,12 +138,16 @@ public class JointSegmentation {
 				id2
 		};
 		SAMFileReader[] sfrs = new SAMFileReader[]{
-				new SAMFileReader(new File(bam1)),
-				new SAMFileReader(new File(bam2)),
-		}; 
+				new SAMFileReader(bam1),
+				new SAMFileReader(bam2),
+		};
+		Strandedness[] strandednesses = new Strandedness[]{
+			strandedness1,
+			strandedness2,
+		};
 
-		GTFWriter gw = new GTFWriter(outGtfFile);
-		PrintStream tabular = IO.bufferedPrintstream(outTabularFile);
+		GTFWriter gw = new GTFWriter(IO.bufferedPrintstream(gtf));
+		PrintStream tabular = IO.bufferedPrintstream(table);
 		tabular.printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", "samples","locus_id","changepoint","upstream_segment","downstream_segment","locus","strand","upstream_cov","downstream_cov","site_usage","differential_usage");
 		int changepoint_id=0;
 		for(AnnotatedRegion region : t5p){
@@ -177,7 +181,7 @@ public class JointSegmentation {
 					boolean constrained_decreasing = !u.isNegativeStrand();
 //					2R:454973-454973
 					 
-					List<ChangePoint> changepoints = IdentifyChangePoints.identifyConstrainedNegativeBinomialPoints(ids,sfrs, u.chr, u.start, u.end, maxBins, binSize, minCP, strandedness, u.isNegativeStrand(), alpha_0, beta_0, nb_r, r, p, constrained_decreasing, min_fold);
+					List<ChangePoint> changepoints = IdentifyChangePoints.identifyConstrainedNegativeBinomialPoints(ids,sfrs,strandednesses, u.chr, u.start, u.end, maxBins, binSize, minCP, u.isNegativeStrand(), alpha_0, beta_0, nb_r, r, p, constrained_decreasing, min_fold);
 
 					// write the union exon
 					for(ChangePoint cp : changepoints){
@@ -254,65 +258,4 @@ public class JointSegmentation {
 
 	}
 
-	public static void main(String[] args) throws IOException {
-		
-		class MultiSegmentCommand{	
-		
-			@Parameter(names="-exons1", description="exons from sample 1")
-			String exons1;
-
-			@Parameter(names="-exons2", description="exons from sample 2")
-			String exons2;
-
-			@Parameter(names="-bam1", description="bam from sample 1")
-			String bam1;
-
-			@Parameter(names="-bam2", description="bam from sample 2")
-			String bam2;
-
-			@Parameter(names="-id1", description="id from sample 1")
-			String id1;
-
-			@Parameter(names="-id2", description="id from sample 2")
-			String id2;
-
-			@Parameter(names="-out", description="gtf to which output will be written")
-			String out;
-
-			@Parameter(names="-s", description="strandedness")
-			String strandedness;
-		}
-		
-		class ListCommand{	
-			
-			@Parameter(names="-pairfile", description="gtf from the pairwise analysis")
-			String pairfile;
-
-		}
-
-		class HelpCommand{	
-
-		}
-
-		JCommander jc = new JCommander();
-		MultiSegmentCommand compare = new MultiSegmentCommand();
-		ListCommand list = new ListCommand();
-		HelpCommand help = new HelpCommand();
-		jc.addCommand("compare", compare);
-		jc.addCommand("list", list);
-		jc.addCommand("-h", help);
-		jc.parse(args);
-
-		if(jc.getParsedCommand()==null || jc.getParsedCommand().equals("-h")){
-			jc.usage();
-		}
-		else if(jc.getParsedCommand().equals("compare")){
-			performJointSegmentation(compare.id1, compare.id2, compare.exons1, compare.exons2, compare.bam1, compare.bam2, compare.out, null, Strandedness.valueOf(compare.strandedness));	
-		}
-		else if(jc.getParsedCommand().equals("list")){
-			identifyBypassedRegions(new File(list.pairfile));	
-		}
-
-
-	}
 }

@@ -313,7 +313,7 @@ public class IdentifyChangePoints {
 		}
 	}
 
-	public static List<ChangePoint> identifyConstrainedNegativeBinomialPoints(String[] ids, SAMFileReader[] sfrs, String chr, int start, int end, int maxBins, int binSize, int minCP, Strandedness strandedness, boolean isNegativeStrand, double alpha_0, double beta_0, int nb_r, int r, double p, boolean constrain_decreasing, double min_fold){
+	public static List<ChangePoint> identifyConstrainedNegativeBinomialPoints(String[] ids, SAMFileReader[] sfrs, Strandedness[] strandednesses, String chr, int start, int end, int maxBins, int binSize, int minCP, boolean isNegativeStrand, double alpha_0, double beta_0, int nb_r, int r, double p, boolean constrain_decreasing, double min_fold){
 
 
 		int l = end-start+1;
@@ -341,7 +341,7 @@ public class IdentifyChangePoints {
 		// calculate the coverage in this chunk
 		double[][] y = new double[sfrs.length][];
 		for(int i=0; i<sfrs.length; i++){
-			int[] cov = BAMTools.binnedMaxEndCoverage(sfrs[i], chr, start, nBins, binSize, false, true, strandedness, isNegativeStrand);
+			int[] cov = BAMTools.binnedMaxEndCoverage(sfrs[i], chr, start, nBins, binSize, false, true, strandednesses[i], isNegativeStrand);
 			y[i] = new double[nBins];
 			for(int j=0; j<nBins; j++){
 				y[i][j] = cov[j];
