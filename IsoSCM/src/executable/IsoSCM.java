@@ -445,8 +445,10 @@ public class IsoSCM {
 			AssembleCommand assemblyConfiguration1 = ConfigurationIO.readAssemblyConfiguration(compare.assemblyXml1);
 			AssembleCommand assemblyConfiguration2 = ConfigurationIO.readAssemblyConfiguration(compare.assemblyXml2);
 			
-			File spliced_exon_gtf1 = FileUtils.getFile(assemblyConfiguration1.dir,"tmp",assemblyConfiguration1.base+".exon.gtf");
-			File spliced_exon_gtf2 = FileUtils.getFile(assemblyConfiguration1.dir,"tmp",assemblyConfiguration1.base+".exon.gtf");
+			Strandedness s1=Strandedness.valueOf(assemblyConfiguration1.strandedness); Strandedness s2=Strandedness.valueOf(assemblyConfiguration2.strandedness);
+			
+			File spliced_exon_gtf1 = FileUtils.getFile(assemblyConfiguration1.dir,"tmp",assemblyConfiguration1.base+".exon"+(s1==Strandedness.unstranded?".trimmed":"")+".gtf");
+			File spliced_exon_gtf2 = FileUtils.getFile(assemblyConfiguration1.dir,"tmp",assemblyConfiguration1.base+".exon"+(s2==Strandedness.unstranded?".trimmed":"")+".gtf");
 			
 			File table = FileUtils.getFile(compare.dir,Util.sprintf("%s.txt",compare.base));
 			File gtf = FileUtils.getFile(compare.dir,Util.sprintf("%s.gtf",compare.base));
@@ -461,7 +463,7 @@ public class IsoSCM {
 			double p=assemblyConfiguration1.segment_p;
 			double min_fold=assemblyConfiguration1.min_fold;
 			
-			JointSegmentation.performJointSegmentation(assemblyConfiguration1.base, assemblyConfiguration2.base, spliced_exon_gtf1, spliced_exon_gtf2, assemblyConfiguration1.bam, assemblyConfiguration2.bam, table, gtf, Strandedness.valueOf(assemblyConfiguration1.strandedness), Strandedness.valueOf(assemblyConfiguration2.strandedness), maxBins, binSize, minCP, alpha_0, beta_0, nb_r, r, p, min_fold);	
+			JointSegmentation.performJointSegmentation(assemblyConfiguration1.base, assemblyConfiguration2.base, spliced_exon_gtf1, spliced_exon_gtf2, assemblyConfiguration1.bam, assemblyConfiguration2.bam, table, gtf,s1,s2, maxBins, binSize, minCP, alpha_0, beta_0, nb_r, r, p, min_fold);	
 		}
 	}
 }

@@ -1,6 +1,7 @@
 package scm;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -125,7 +126,7 @@ public class IdentifyConstrainedChangePoints {
 
 		// perform the recursions
 		for(int t=n-1; t>-1; t--){
-			List<Double> log_probs = new LinkedList<Double>();
+			List<Double> log_probs = new ArrayList<Double>();
 
 			for(int s=t; s<n-1; s++){
 				// find the most likely position of the positions of the next change point
@@ -203,10 +204,10 @@ public class IdentifyConstrainedChangePoints {
 			log_q[t] = Util.logSum(log_probs);
 		}
 
-		//		List<List<Integer>> ensembl = new LinkedList<List<Integer>>();
-		List<Integer> mapCPs = new LinkedList<Integer>();
-		List<Double> mapMLEs = new LinkedList<Double>();
-		List<Double> mapLs = new LinkedList<Double>();
+		//		List<List<Integer>> ensembl = new ArrayList<List<Integer>>();
+		List<Integer> mapCPs = new ArrayList<Integer>();
+		List<Double> mapMLEs = new ArrayList<Double>();
+		List<Double> mapLs = new ArrayList<Double>();
 
 
 		int first = 0;
@@ -301,7 +302,7 @@ public class IdentifyConstrainedChangePoints {
 
 		// perform the recursions
 		for(int t=n-1; t>-1; t--){
-			List<Double> log_probs = new LinkedList<Double>();
+			List<Double> log_probs = new ArrayList<Double>();
 
 			for(int s=t; s<n-1; s++){
 				// find the most likely position of the positions of the next change point
@@ -377,10 +378,10 @@ public class IdentifyConstrainedChangePoints {
 			log_q[t] = Util.logSum(log_probs);
 		}
 
-		//		List<List<Integer>> ensembl = new LinkedList<List<Integer>>();
-		List<Integer> mapCPs = new LinkedList<Integer>();
-		List<Double> mapMLEs = new LinkedList<Double>();
-		List<Double> mapLs = new LinkedList<Double>();
+		//		List<List<Integer>> ensembl = new ArrayList<List<Integer>>();
+		List<Integer> mapCPs = new ArrayList<Integer>();
+		List<Double> mapMLEs = new ArrayList<Double>();
+		List<Double> mapLs = new ArrayList<Double>();
 
 
 		int first = 0;
@@ -473,7 +474,7 @@ public class IdentifyConstrainedChangePoints {
 
 		// perform the recursions
 		for(int t=n-1; t>-1; t--){
-			List<Double> log_probs = new LinkedList<Double>();
+			List<Double> log_probs = new ArrayList<Double>();
 
 			for(int s=t; s<n-1; s++){
 				// find the most likely position of the positions of the next change point
@@ -540,10 +541,10 @@ public class IdentifyConstrainedChangePoints {
 			log_q[t] = Util.logSum(log_probs);
 		}
 
-		//		List<List<Integer>> ensembl = new LinkedList<List<Integer>>();
-		List<Integer> mapCPs = new LinkedList<Integer>();
-		List<Double> mapMLEs = new LinkedList<Double>();
-		List<Double> mapLs = new LinkedList<Double>();
+		//		List<List<Integer>> ensembl = new ArrayList<List<Integer>>();
+		List<Integer> mapCPs = new ArrayList<Integer>();
+		List<Double> mapMLEs = new ArrayList<Double>();
+		List<Double> mapLs = new ArrayList<Double>();
 		int first = 0;
 		int last = map[0].getExtreme();
 		mapMLEs.add(segment_mle[first][last-1]);
@@ -632,7 +633,7 @@ public class IdentifyConstrainedChangePoints {
 
 		// perform the recursions
 		for(int t=n-1; t>-1; t--){
-			List<Double> log_probs = new LinkedList<Double>();
+			List<Double> log_probs = new ArrayList<Double>();
 
 			for(int s=t; s<n-1; s++){
 				// find the most likely position of the positions of the next change point
@@ -695,10 +696,10 @@ public class IdentifyConstrainedChangePoints {
 			log_q[t] = Util.logSum(log_probs);
 		}
 
-		//		List<List<Integer>> ensembl = new LinkedList<List<Integer>>();
-		List<Integer> mapCPs = new LinkedList<Integer>();
-		List<Double> mapMLEs = new LinkedList<Double>();
-		List<Double> mapLs = new LinkedList<Double>();
+		//		List<List<Integer>> ensembl = new ArrayList<List<Integer>>();
+		List<Integer> mapCPs = new ArrayList<Integer>();
+		List<Double> mapMLEs = new ArrayList<Double>();
+		List<Double> mapLs = new ArrayList<Double>();
 		int first = 0;
 		int last = map[0].getExtreme();
 		mapMLEs.add(segment_mle[first][last-1]);
@@ -820,7 +821,7 @@ public class IdentifyConstrainedChangePoints {
 
 		// perform the recursions
 		for(int t=n-1; t>-1; t--){
-			List<Double> log_probs = new LinkedList<Double>();
+			List<Double> log_probs = new ArrayList<Double>();
 
 			for(int s=t; s<n-1; s++){
 				// find the most likely position of the positions of the next change point
@@ -909,10 +910,10 @@ public class IdentifyConstrainedChangePoints {
 			log_q[t] = Util.logSum(log_probs);
 		}
 
-		//		List<List<Integer>> ensembl = new LinkedList<List<Integer>>();
-		List<Integer> mapCPs = new LinkedList<Integer>();
-		List<Double[]> mapMLEs = new LinkedList<Double[]>();
-		List<Double> mapLs = new LinkedList<Double>();
+		//		List<List<Integer>> ensembl = new ArrayList<List<Integer>>();
+		List<Integer> mapCPs = new ArrayList<Integer>();
+		List<Double[]> mapMLEs = new ArrayList<Double[]>();
+		List<Double> mapLs = new ArrayList<Double>();
 		int first = 0;
 		int last = map[0].getExtreme();
 		
@@ -1020,7 +1021,7 @@ public class IdentifyConstrainedChangePoints {
 
 		// perform the recursions
 		for(int t=n-1; t>-1; t--){
-			List<Double> log_probs = new LinkedList<Double>();
+			List<Double> log_probs = new ArrayList<Double>();
 
 			for(int s=t; s<n-1; s++){
 				// find the most likely position of the positions of the next change point
@@ -1073,10 +1074,10 @@ public class IdentifyConstrainedChangePoints {
 			log_q[t] = Util.logSum(log_probs);
 		}
 
-		//		List<List<Integer>> ensembl = new LinkedList<List<Integer>>();
-		List<Integer> mapCPs = new LinkedList<Integer>();
-		List<Double> mapMLEs = new LinkedList<Double>();
-		List<Double> mapLs = new LinkedList<Double>();
+		//		List<List<Integer>> ensembl = new ArrayList<List<Integer>>();
+		List<Integer> mapCPs = new ArrayList<Integer>();
+		List<Double> mapMLEs = new ArrayList<Double>();
+		List<Double> mapLs = new ArrayList<Double>();
 		int first = 0;
 		int last = map[0].getExtreme();
 		mapMLEs.add(segment_mle[first][last-1]);
@@ -1162,7 +1163,7 @@ public class IdentifyConstrainedChangePoints {
 		}
 		for(int j=m+1-2; j>-1; j--){
 			for(int t = n-m-1+j; t > j-1; t--){
-				List<Double> log_probs = new LinkedList<Double>();
+				List<Double> log_probs = new ArrayList<Double>();
 				for(int s=t; s<n-m-1+j+1; s++){
 					log_probs.add(log_p[t][s]+log_q_j[j+1][s+1]+log_g[s-t+1]);
 					map_j[j][t].put(s+1, log_p[t][s]+map_j[j+1][s+1].getExtremeValue()+log_g[s-t+1]);
@@ -1188,10 +1189,10 @@ public class IdentifyConstrainedChangePoints {
 		}
 		 */
 
-		//		List<List<Integer>> ensembl = new LinkedList<List<Integer>>();
-		List<Integer> mapCPs = new LinkedList<Integer>();
-		List<Double> mapMLEs = new LinkedList<Double>();
-		List<Double> mapLs = new LinkedList<Double>();
+		//		List<List<Integer>> ensembl = new ArrayList<List<Integer>>();
+		List<Integer> mapCPs = new ArrayList<Integer>();
+		List<Double> mapMLEs = new ArrayList<Double>();
+		List<Double> mapLs = new ArrayList<Double>();
 		int first = 0;
 		int j=0;
 		int last = map_j[j][0].getExtreme();
@@ -1282,7 +1283,7 @@ public class IdentifyConstrainedChangePoints {
 		}
 		for(int j=m+1-2; j>-1; j--){
 			for(int t = n-m-1+j; t > j-1; t--){
-				List<Double> log_probs = new LinkedList<Double>();
+				List<Double> log_probs = new ArrayList<Double>();
 				for(int s=t; s<n-m-1+j+1; s++){
 					double log_p_t_s = 0;
 					for(int i=0; i<results.length; i++){
@@ -1362,10 +1363,10 @@ public class IdentifyConstrainedChangePoints {
 			e.printStackTrace();
 		}
 		
-		//		List<List<Integer>> ensembl = new LinkedList<List<Integer>>();
-		List<Integer> mapCPs = new LinkedList<Integer>();
-		List<Double> mapMLEs = new LinkedList<Double>();
-		List<Double> mapLs = new LinkedList<Double>();
+		//		List<List<Integer>> ensembl = new ArrayList<List<Integer>>();
+		List<Integer> mapCPs = new ArrayList<Integer>();
+		List<Double> mapMLEs = new ArrayList<Double>();
+		List<Double> mapLs = new ArrayList<Double>();
 		int first = 0;
 		int j=0;
 		int last = map_j[j][0].getExtreme();
@@ -1444,7 +1445,7 @@ public class IdentifyConstrainedChangePoints {
 		//		RandomEngine rng =  new DRand();
 		RandomEngine rng = RandomEngine.makeDefault();
 
-		List<Double> Ys = new LinkedList<Double>();
+		List<Double> Ys = new ArrayList<Double>();
 
 
 		int R=5;

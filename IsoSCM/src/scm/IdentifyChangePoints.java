@@ -334,7 +334,7 @@ public class IdentifyChangePoints {
 		// cluster them, selecting the most likely from each cluster
 		// write change points to GTF
 
-		List<ChangePoint> changePoints = new LinkedList<ChangePoint>();
+		List<ChangePoint> changePoints = new ArrayList<ChangePoint>();
 
 
 
@@ -508,8 +508,8 @@ public class IdentifyChangePoints {
 		ti = new TranscriptIterator(assembly_gtf);
 		for(AnnotatedRegion e : ti){
 			if("exon".equals(e.annotation)){		
-				//			List<Double> l = new LinkedList<Double>();
-				//			List<AnnotatedRegion> ll = new LinkedList<AnnotatedRegion>();
+				//			List<Double> l = new ArrayList<Double>();
+				//			List<AnnotatedRegion> ll = new ArrayList<AnnotatedRegion>();
 				ExtremeTracker<Double> min_coverage=new ExtremeTracker<Double>();
 				for(AnnotatedRegion r : IntervalTools.ContainedIntervals(quantified, e.chr, e.start, e.end, e.strand)){
 					//				l.add((Double) r.getAttribute("coverage"));
@@ -1058,7 +1058,7 @@ public class IdentifyChangePoints {
 
 				String attribute = segment.isNegativeStrand() ? "after_mle" : "before_mle";
 
-				List<AnnotatedRegion> to_delete = new LinkedList<AnnotatedRegion>();
+				List<AnnotatedRegion> to_delete = new ArrayList<AnnotatedRegion>();
 				List<AnnotatedRegion> overlapping3p = IntervalTools.OverlappingIntervals(ends3p, segment.chr, segment.start, segment.end, segment.strand);
 				Collections.sort(overlapping3p, c);
 				double max_mle = 0;
@@ -1083,7 +1083,7 @@ public class IdentifyChangePoints {
 
 				String attribute = segment.isNegativeStrand() ? "before_mle" : "after_mle";
 
-				List<AnnotatedRegion> to_delete = new LinkedList<AnnotatedRegion>();
+				List<AnnotatedRegion> to_delete = new ArrayList<AnnotatedRegion>();
 				List<AnnotatedRegion> overlapping5p = IntervalTools.OverlappingIntervals(ends5p, segment.chr, segment.start, segment.end, segment.strand);
 				Collections.sort(overlapping5p, c);
 				double max_mle = 0;
