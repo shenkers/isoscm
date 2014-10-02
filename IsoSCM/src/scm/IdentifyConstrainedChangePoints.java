@@ -768,7 +768,6 @@ public class IdentifyConstrainedChangePoints {
 		//			throw new RuntimeException("unimplemented");
 		int n = y[0].length;
 
-		double[] log_q	= new double[n];
 		@SuppressWarnings("unchecked")
 		ExtremeObjectTracker<Integer, Double>[] map = new ExtremeObjectTracker[n];
 		ExtremeObjectTracker<Double, Double>[][] map_mle = new ExtremeObjectTracker[y.length][n];
@@ -810,28 +809,11 @@ public class IdentifyConstrainedChangePoints {
 			log_G[i] = Util.logSum(Util.list(log_G[i],log_g[i]));
 		}
 
-		//		double aBeta = 1;
-		//		double bBeta = 8;
-		//		double zBeta = Beta.logBeta(aBeta, bBeta);
-
-		//TODO put log_G instead of log_g when t=0
-		//TODO make sure log_G = logsum, not log_G += logsum
-		//TODO make sure log_g = nb(i) not nb(i+1) so that sums to 1
-		//TODO make sure that the length r is bigger than 1 to assign non-zero probs to long segments
-
 		// perform the recursions
 		for(int t=n-1; t>-1; t--){
-			List<Double> log_probs = new ArrayList<Double>();
-
+		
 			for(int s=t; s<n-1; s++){
 				// find the most likely position of the positions of the next change point
-
-				//				if(t==0 || t==299)
-				//				System.out.printf("(%d,%d) all %.1f < %.1f map s+1 %.1f %d\n", t,s, segment_mle[t][s], map_mle[s+1].getMaxObject(),map[s+1].getMax(),map[s+1].getMaxObject());
-				//				if(map_mle[s+1].getMaxObject() > segment_mle[t][s])
-				//					System.out.printf("(%d,%d) fail %.1f < %.1f\n", t,s, segment_mle[t][s], map_mle[s+1].getMaxObject());
-
-				//				if(map_mle[s+1].getMaxObject() > segment_mle[t][s])
 
 				/*
 				 * The constraint: if the MLE of the next segment is greater than this segment, or the probability of 
@@ -889,9 +871,6 @@ public class IdentifyConstrainedChangePoints {
 					map[t].put(s+1, log_p_t_s+map[s+1].getMaxObject()+ p_segment_length);
 				}
 
-
-				// sum over the positions of the next change point
-				log_probs.add(log_p_t_s+log_q[s+1]+log_g[s-t]);
 			}
 
 			double log_p_t_s = 0;
@@ -906,8 +885,6 @@ public class IdentifyConstrainedChangePoints {
 			map_mle[i][t].put(segment_mle[i][t][n-1], log_p_t_s + Math.log(1 - Math.exp(log_G[n-t-1])));
 			nxt_mle[i][t].put(segment_mle[i][t][n-1], log_p_t_s + Math.log(1 - Math.exp(log_G[n-t-1])));
 			}
-			log_probs.add(log_p_t_s + Math.log(1 - Math.exp(log_G[n-t-1])));
-			log_q[t] = Util.logSum(log_probs);
 		}
 
 		//		List<List<Integer>> ensembl = new ArrayList<List<Integer>>();

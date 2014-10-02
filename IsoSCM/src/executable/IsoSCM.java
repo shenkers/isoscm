@@ -93,7 +93,7 @@ public class IsoSCM {
 			// specify the log file for assembly
 			ThreadContext.put("log_file", log_file.getAbsolutePath());
 			
-			logger.info("Starting assembly ...");
+			logger.info("Starting assemble ...");
 			
 			File configuration_file = FileUtils.getFile(out_dir, Util.sprintf("%s.assembly_parameters.xml", assemble.base));
 			ConfigurationIO.writeConfiguration(assemble, configuration_file);
@@ -299,6 +299,8 @@ public class IsoSCM {
 				sfr.close();
 
 			}
+			
+			logger.info("assemble completed.");	
 		}
 		else if(jc.getParsedCommand().equals("segment")){	
 			// segmentation
@@ -470,6 +472,7 @@ public class IsoSCM {
 			splicegraph.ExonSpliceGraph.iterateSpliceIsoforms(assembly_gtf,gw,skipped,enumerate.max_paths);
 			gw.close();
 			skipped.close();
+			logger.info("enumerate completed.");
 		}
 		else if(jc.getParsedCommand().equals("compare")){
 			if(!compare.dir.exists())
@@ -507,7 +510,7 @@ public class IsoSCM {
 			
 			JointSegmentation.performJointSegmentation(assemblyConfiguration1.base, assemblyConfiguration2.base, spliced_exon_gtf1, spliced_exon_gtf2, assemblyConfiguration1.bam, assemblyConfiguration2.bam, table, gtf,s1,s2, maxBins, binSize, minCP, alpha_0, beta_0, nb_r, r, p, min_fold);
 			
-			logger.info("exiting ...");
+			logger.info("compare comleted.");
 		}
 	}
 }
