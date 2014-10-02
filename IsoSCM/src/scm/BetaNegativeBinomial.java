@@ -4,9 +4,13 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.swing.text.Utilities;
+
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.math3.special.Beta;
 import org.apache.commons.math3.special.Gamma;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import util.Util;
 import util.Util.ExtremeObjectTracker;
@@ -18,7 +22,7 @@ import cern.jet.random.engine.RandomEngine;
 
 public class BetaNegativeBinomial {
 
-	
+	private static Logger l = LogManager.getLogger();
 
 	/*
 	 * Calculate the probability of every sequence from (s,t) of observations
@@ -26,7 +30,6 @@ public class BetaNegativeBinomial {
 	 * over possible parameter values with prior alpha and beta. 
 	 */
 	public static SCMResult calculate_segment_probabilities(double[] y, double alpha_0, double beta_0, int r){	
-	
 		IntegralTable cumulative = new IntegralTable(y);
 		double[] log_binomial_y = new double[y.length];
 		for(int i=0; i<y.length; i++){
@@ -120,7 +123,7 @@ public class BetaNegativeBinomial {
 			for(int s=t; s<n-1; s++){
 				// find the most likely position of the positions of the next change point
 				double p_segment_length = t==0? Math.log(1 - Math.exp(log_G[s])) : log_g[s-t];
-				map[t].put(s+1, log_p[t][s]+map[s+1].getExtremeValue()+ p_segment_length);			
+				map[t].put(s+1, log_p[t][s]+map[s+1].getMax()+ p_segment_length);			
 
 				// sum over the positions of the next change point
 				log_probs.add(log_p[t][s]+log_q[s+1]+log_g[s-t]);
@@ -137,7 +140,7 @@ public class BetaNegativeBinomial {
 		List<Double> mapMLEs = new ArrayList<Double>();
 		List<Double> mapLs = new ArrayList<Double>();
 		int first = 0;
-		int last = map[0].getExtreme();
+		int last = map[0].getMaxObject();
 		mapMLEs.add(segment_mle[first][last-1]);
 
 		while(last<n){
@@ -146,7 +149,7 @@ public class BetaNegativeBinomial {
 			//			System.out.println(Util.list(map[last].getExtreme(),n,map[last].getExtremeValue()));
 			mapCPs.add(last-1);
 			first = last;
-			last = map[last].getExtreme();
+			last = map[last].getMaxObject();
 			mapMLEs.add(segment_mle[first][last-1]);
 		}
 		//		System.out.println(mapCPs);
@@ -226,7 +229,7 @@ public class BetaNegativeBinomial {
 				List<Double> log_probs = new ArrayList<Double>();
 				for(int s=t; s<n-m-1+j+1; s++){
 					log_probs.add(log_p[t][s]+log_q_j[j+1][s+1]+log_g[s-t+1]);
-					map_j[j][t].put(s+1, log_p[t][s]+map_j[j+1][s+1].getExtremeValue()+log_g[s-t+1]);
+					map_j[j][t].put(s+1, log_p[t][s]+map_j[j+1][s+1].getMax()+log_g[s-t+1]);
 				}
 				log_q_j[j][t] = Util.logSum(log_probs);
 			}
@@ -255,7 +258,7 @@ public class BetaNegativeBinomial {
 		List<Double> mapLs = new ArrayList<Double>();
 		int first = 0;
 		int j=0;
-		int last = map_j[j][0].getExtreme();
+		int last = map_j[j][0].getMaxObject();
 		mapMLEs.add(segment_mle[first][last-1]);
 		j++;
 
@@ -265,7 +268,7 @@ public class BetaNegativeBinomial {
 			//			System.out.println(Util.list(map[last].getExtreme(),n,map[last].getExtremeValue()));
 			mapCPs.add(last-1);
 			first = last;
-			last = map_j[j][last].getExtreme();
+			last = map_j[j][last].getMaxObject();
 			mapMLEs.add(segment_mle[first][last-1]);
 			j++;
 		}
@@ -350,7 +353,7 @@ public class BetaNegativeBinomial {
 						log_p_t_s += results[i].log_p[t][s];
 					}
 					log_probs.add(log_p_t_s+log_q_j[j+1][s+1]+log_g[s-t+1]);
-					map_j[j][t].put(s+1, log_p_t_s+map_j[j+1][s+1].getExtremeValue()+log_g[s-t+1]);
+					map_j[j][t].put(s+1, log_p_t_s+map_j[j+1][s+1].getMax()+log_g[s-t+1]);
 				}
 				log_q_j[j][t] = Util.logSum(log_probs);
 			}
@@ -431,7 +434,7 @@ public class BetaNegativeBinomial {
 		List<Double> mapLs = new ArrayList<Double>();
 		int first = 0;
 		int j=0;
-		int last = map_j[j][0].getExtreme();
+		int last = map_j[j][0].getMaxObject();
 //		mapMLEs.add(segment_mle[first][last-1]);
 		j++;
 
@@ -441,7 +444,7 @@ public class BetaNegativeBinomial {
 			//			System.out.println(Util.list(map[last].getExtreme(),n,map[last].getExtremeValue()));
 			mapCPs.add(last-1);
 			first = last;
-			last = map_j[j][last].getExtreme();
+			last = map_j[j][last].getMaxObject();
 //			mapMLEs.add(segment_mle[first][last-1]);
 			j++;
 		}

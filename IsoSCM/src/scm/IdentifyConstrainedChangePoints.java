@@ -211,7 +211,7 @@ public class IdentifyConstrainedChangePoints {
 
 
 		int first = 0;
-		//		int last = inc_map[0].getExtreme();
+		//		int last = inc_map[0].getMaxObject();
 		int last = -1;
 		
 	
@@ -220,7 +220,7 @@ public class IdentifyConstrainedChangePoints {
 		else
 			last = inc_map[0].getMaxObject();
 		
-		Regime regime = nxt_regime[0].getExtreme();
+		Regime regime = nxt_regime[0].getMaxObject();
 		
 		
 		mapMLEs.add(segment_mle[first][last-1]);
@@ -394,7 +394,7 @@ public class IdentifyConstrainedChangePoints {
 		else
 			last = dec_map[0].getMaxObject();
 		
-		Regime regime = nxt_regime[0].getExtreme();
+		Regime regime = nxt_regime[0].getMaxObject();
 		
 		
 		mapMLEs.add(segment_mle[first][last-1]);
@@ -501,12 +501,12 @@ public class IdentifyConstrainedChangePoints {
 					}
 					else{ 
 						if(t>0){
-							map[t].put(s+1, log_p[t][s]+map[s+1].getExtremeValue()+log_g[s-t+1]);
-							map_mle[t].put(extreme, log_p[t][s]+map[s+1].getExtremeValue()+log_g[s-t+1]);
+							map[t].put(s+1, log_p[t][s]+map[s+1].getMaxObject()+log_g[s-t+1]);
+							map_mle[t].put(extreme, log_p[t][s]+map[s+1].getMaxObject()+log_g[s-t+1]);
 						}
 						else{
-							map[t].put(s+1, log_p[t][s]+map[s+1].getExtremeValue()+log_G[s-t+1]);
-							map_mle[t].put(extreme, log_p[t][s]+map[s+1].getExtremeValue()+log_G[s-t+1]);	
+							map[t].put(s+1, log_p[t][s]+map[s+1].getMaxObject()+log_G[s-t+1]);
+							map_mle[t].put(extreme, log_p[t][s]+map[s+1].getMaxObject()+log_G[s-t+1]);	
 						}
 					}
 				}
@@ -518,12 +518,12 @@ public class IdentifyConstrainedChangePoints {
 					}
 					else{ 
 						if(t>0){
-							map[t].put(s+1, log_p[t][s]+map[s+1].getExtremeValue()+log_g[s-t+1]);
-							map_mle[t].put(extreme, log_p[t][s]+map[s+1].getExtremeValue()+log_g[s-t+1]);
+							map[t].put(s+1, log_p[t][s]+map[s+1].getMaxObject()+log_g[s-t+1]);
+							map_mle[t].put(extreme, log_p[t][s]+map[s+1].getMaxObject()+log_g[s-t+1]);
 						}
 						else{
-							map[t].put(s+1, log_p[t][s]+map[s+1].getExtremeValue()+log_G[s-t+1]);
-							map_mle[t].put(extreme, log_p[t][s]+map[s+1].getExtremeValue()+log_G[s-t+1]);
+							map[t].put(s+1, log_p[t][s]+map[s+1].getMaxObject()+log_G[s-t+1]);
+							map_mle[t].put(extreme, log_p[t][s]+map[s+1].getMaxObject()+log_G[s-t+1]);
 
 						}
 					}
@@ -546,7 +546,7 @@ public class IdentifyConstrainedChangePoints {
 		List<Double> mapMLEs = new ArrayList<Double>();
 		List<Double> mapLs = new ArrayList<Double>();
 		int first = 0;
-		int last = map[0].getExtreme();
+		int last = map[0].getMaxObject();
 		mapMLEs.add(segment_mle[first][last-1]);
 		//		System.out.println(map_mle[0].getMax());
 		//		System.out.println(map_mle[0].getMaxObject());
@@ -562,7 +562,7 @@ public class IdentifyConstrainedChangePoints {
 			//			System.out.println(map_mle[last].getMaxObject());
 			mapCPs.add(last-1);
 			first = last;
-			last = map[last].getExtreme();
+			last = map[last].getMaxObject();
 			mapMLEs.add(segment_mle[first][last-1]);
 		}
 
@@ -673,9 +673,9 @@ public class IdentifyConstrainedChangePoints {
 				}
 				else{ 
 					double p_segment_length = t==0? Math.log(1 - Math.exp(log_G[s])) : log_g[s-t];
-					map[t].put(s+1, log_p[t][s]+map[s+1].getExtremeValue()+ p_segment_length);
-					map_mle[t].put(extreme, log_p[t][s]+map[s+1].getExtremeValue()+ p_segment_length);
-					nxt_mle[t].put(segment_mle[t][s], log_p[t][s]+map[s+1].getExtremeValue()+ p_segment_length);
+					map[t].put(s+1, log_p[t][s]+map[s+1].getMaxObject()+ p_segment_length);
+					map_mle[t].put(extreme, log_p[t][s]+map[s+1].getMaxObject()+ p_segment_length);
+					nxt_mle[t].put(segment_mle[t][s], log_p[t][s]+map[s+1].getMaxObject()+ p_segment_length);
 				}
 
 				// sum over the positions of the next change point
@@ -701,7 +701,7 @@ public class IdentifyConstrainedChangePoints {
 		List<Double> mapMLEs = new ArrayList<Double>();
 		List<Double> mapLs = new ArrayList<Double>();
 		int first = 0;
-		int last = map[0].getExtreme();
+		int last = map[0].getMaxObject();
 		mapMLEs.add(segment_mle[first][last-1]);
 		//		System.out.println(map_mle[0].getMax());
 		//		System.out.println(map_mle[0].getMaxObject());
@@ -717,7 +717,7 @@ public class IdentifyConstrainedChangePoints {
 			//			System.out.println(map_mle[last].getMaxObject());
 			mapCPs.add(last-1);
 			first = last;
-			last = map[last].getExtreme();
+			last = map[last].getMaxObject();
 			mapMLEs.add(segment_mle[first][last-1]);
 		}
 
@@ -876,8 +876,8 @@ public class IdentifyConstrainedChangePoints {
 					}
 					else{ 
 						double p_segment_length = t==0? Math.log(1 - Math.exp(log_G[s])) : log_g[s-t];
-						map_mle[i][t].put(extreme, log_p_t_s+map[s+1].getExtremeValue()+ p_segment_length);
-						nxt_mle[i][t].put(segment_mle[i][t][s], log_p_t_s+map[s+1].getExtremeValue()+ p_segment_length);
+						map_mle[i][t].put(extreme, log_p_t_s+map[s+1].getMaxObject()+ p_segment_length);
+						nxt_mle[i][t].put(segment_mle[i][t][s], log_p_t_s+map[s+1].getMaxObject()+ p_segment_length);
 					}
 				}
 
@@ -886,7 +886,7 @@ public class IdentifyConstrainedChangePoints {
 				}
 				else{
 					double p_segment_length = t==0? Math.log(1 - Math.exp(log_G[s])) : log_g[s-t];
-					map[t].put(s+1, log_p_t_s+map[s+1].getExtremeValue()+ p_segment_length);
+					map[t].put(s+1, log_p_t_s+map[s+1].getMaxObject()+ p_segment_length);
 				}
 
 
@@ -915,7 +915,7 @@ public class IdentifyConstrainedChangePoints {
 		List<Double[]> mapMLEs = new ArrayList<Double[]>();
 		List<Double> mapLs = new ArrayList<Double>();
 		int first = 0;
-		int last = map[0].getExtreme();
+		int last = map[0].getMaxObject();
 		
 		Double[] mle = new Double[y.length];
 		for(int i=0; i<y.length; i++){
@@ -937,7 +937,7 @@ public class IdentifyConstrainedChangePoints {
 			//			System.out.println(map_mle[last].getMaxObject());
 			mapCPs.add(last-1);
 			first = last;
-			last = map[last].getExtreme();
+			last = map[last].getMaxObject();
 			mle = new Double[y.length];
 			
 			for(int i=0; i<y.length; i++){
@@ -1058,8 +1058,8 @@ public class IdentifyConstrainedChangePoints {
 				}
 				else{ 
 					double p_segment_length = t==0? Math.log(1 - Math.exp(log_G[s])) : log_g[s-t];
-					map[t].put(s+1, log_p[t][s]+map[s+1].getExtremeValue()+ p_segment_length);
-					nxt_mle[t].put(segment_mle[t][s], log_p[t][s]+map[s+1].getExtremeValue()+ p_segment_length);
+					map[t].put(s+1, log_p[t][s]+map[s+1].getMaxObject()+ p_segment_length);
+					nxt_mle[t].put(segment_mle[t][s], log_p[t][s]+map[s+1].getMaxObject()+ p_segment_length);
 				}
 
 				// sum over the positions of the next change point
@@ -1079,13 +1079,13 @@ public class IdentifyConstrainedChangePoints {
 		List<Double> mapMLEs = new ArrayList<Double>();
 		List<Double> mapLs = new ArrayList<Double>();
 		int first = 0;
-		int last = map[0].getExtreme();
+		int last = map[0].getMaxObject();
 		mapMLEs.add(segment_mle[first][last-1]);
 
 		while(last<n){
 			mapCPs.add(last-1);
 			first = last;
-			last = map[last].getExtreme();
+			last = map[last].getMaxObject();
 			mapMLEs.add(segment_mle[first][last-1]);
 		}
 
@@ -1166,7 +1166,7 @@ public class IdentifyConstrainedChangePoints {
 				List<Double> log_probs = new ArrayList<Double>();
 				for(int s=t; s<n-m-1+j+1; s++){
 					log_probs.add(log_p[t][s]+log_q_j[j+1][s+1]+log_g[s-t+1]);
-					map_j[j][t].put(s+1, log_p[t][s]+map_j[j+1][s+1].getExtremeValue()+log_g[s-t+1]);
+					map_j[j][t].put(s+1, log_p[t][s]+map_j[j+1][s+1].getMaxObject()+log_g[s-t+1]);
 				}
 				log_q_j[j][t] = Util.logSum(log_probs);
 			}
@@ -1195,7 +1195,7 @@ public class IdentifyConstrainedChangePoints {
 		List<Double> mapLs = new ArrayList<Double>();
 		int first = 0;
 		int j=0;
-		int last = map_j[j][0].getExtreme();
+		int last = map_j[j][0].getMaxObject();
 		mapMLEs.add(segment_mle[first][last-1]);
 		j++;
 
@@ -1205,7 +1205,7 @@ public class IdentifyConstrainedChangePoints {
 			//			System.out.println(Util.list(map[last].getExtreme(),n,map[last].getExtremeValue()));
 			mapCPs.add(last-1);
 			first = last;
-			last = map_j[j][last].getExtreme();
+			last = map_j[j][last].getMaxObject();
 			mapMLEs.add(segment_mle[first][last-1]);
 			j++;
 		}
@@ -1290,7 +1290,7 @@ public class IdentifyConstrainedChangePoints {
 						log_p_t_s += results[i].log_p[t][s];
 					}
 					log_probs.add(log_p_t_s+log_q_j[j+1][s+1]+log_g[s-t+1]);
-					map_j[j][t].put(s+1, log_p_t_s+map_j[j+1][s+1].getExtremeValue()+log_g[s-t+1]);
+					map_j[j][t].put(s+1, log_p_t_s+map_j[j+1][s+1].getMaxObject()+log_g[s-t+1]);
 				}
 				log_q_j[j][t] = Util.logSum(log_probs);
 			}
@@ -1369,17 +1369,17 @@ public class IdentifyConstrainedChangePoints {
 		List<Double> mapLs = new ArrayList<Double>();
 		int first = 0;
 		int j=0;
-		int last = map_j[j][0].getExtreme();
+		int last = map_j[j][0].getMaxObject();
 		//		mapMLEs.add(segment_mle[first][last-1]);
 		j++;
 
 		while(j<m+1){
-			//			System.out.println(Util.list(Util.list(first,last-1),Util.list(last,map[last].getExtreme()-1)));
-			//			System.out.println(Util.list(segment_mle[first][last-1],segment_mle[last][map[last].getExtreme()-1]));
-			//			System.out.println(Util.list(map[last].getExtreme(),n,map[last].getExtremeValue()));
+			//			System.out.println(Util.list(Util.list(first,last-1),Util.list(last,map[last].getMaxObject()-1)));
+			//			System.out.println(Util.list(segment_mle[first][last-1],segment_mle[last][map[last].getMaxObject()-1]));
+			//			System.out.println(Util.list(map[last].getMaxObject(),n,map[last].getMaxObjectValue()));
 			mapCPs.add(last-1);
 			first = last;
-			last = map_j[j][last].getExtreme();
+			last = map_j[j][last].getMaxObject();
 			//			mapMLEs.add(segment_mle[first][last-1]);
 			j++;
 		}

@@ -2499,15 +2499,7 @@ public class Util {
 		//		T extremeValue;
 		T maxValue;
 		T minValue;
-		boolean isMin;
 		boolean hasExtrema;
-
-		public ExtremeObjectTracker(Comparator<T> comparator, boolean isMin) {
-			//			extremeValue=null;
-			this.comparator=comparator;
-			this.isMin=isMin;
-			hasExtrema=false;
-		}
 
 		public ExtremeObjectTracker(Comparator<T> comparator) {
 			//			extremeValue=null;
@@ -2572,13 +2564,6 @@ public class Util {
 			}
 		}
 
-		public S getExtreme(){
-			if(isMin)
-				return minExtreme;
-			else
-				return maxExtreme;
-		}
-
 		public S getMaxObject(){
 			return maxExtreme;
 		}
@@ -2593,17 +2578,6 @@ public class Util {
 
 		public Set<S> getMinObjects(){
 			return minObjects;
-		}
-
-		//		public T getExtremeValue(){
-		//			return extremeValue;
-		//		}
-
-		public T getExtremeValue(){
-			if(isMin)
-				return minValue;
-			else
-				return maxValue;
 		}
 
 		public T getMax(){
