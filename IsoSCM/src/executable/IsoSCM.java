@@ -1,9 +1,13 @@
 package executable;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.net.URL;
+import java.util.Scanner;
 
+import javax.swing.text.Utilities;
 import javax.xml.bind.JAXBException;
 
 import multisample.JointSegmentation;
@@ -11,6 +15,13 @@ import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMFileReader.ValidationStringency;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.ThreadContext;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.appender.FileAppender;
+import org.apache.logging.log4j.core.config.AppenderRef;
+import org.apache.logging.log4j.core.config.Configuration;
 
 import processing.ClusterExpressedSegments;
 import processing.FindSpliceJunctions;
@@ -26,9 +37,20 @@ import util.Util;
 import com.beust.jcommander.JCommander;
 
 public class IsoSCM {
+	private static final Logger logger = LogManager.getLogger();
 
 	public static void main(String[] args) throws IOException, JAXBException {
+		logger.info("Beginning IsoSCM ...");
 
+		
+//		FileAppender fa = AppenderRef.FileAppender.createAppender(fileName, append, locking, name, immediateFlush, ignore, bufferedIo, bufferSizeStr, layout, filter, advertise, advertiseUri, config)
+//		FileAppender fa = new FileAppender();
+//		  fa.setName("FileLogger");
+//		  fa.setFile("mylog.log");
+//		  fa.setLayout(new PatternLayout("%d %-5p [%c{1}] %m%n"));
+//		  fa.setThreshold(Level.DEBUG);
+//		  fa.setAppend(true);
+//		  fa.activateOptions();
 		
 //		args = new String[]{
 //				"assemble",
@@ -62,10 +84,17 @@ public class IsoSCM {
 			jc.usage();
 		}
 		else if(jc.getParsedCommand().equals("assemble")){
+			
 			File out_dir = assemble.dir;
 			if(!out_dir.exists())
 				out_dir.mkdirs();
 
+			File log_file = FileUtils.getFile(out_dir, Util.sprintf("%s.assembly.log", assemble.base));
+			// specify the log file for assembly
+			ThreadContext.put("log_file", log_file.getAbsolutePath());
+			
+			logger.info("Starting assembly ...");
+			
 			File configuration_file = FileUtils.getFile(out_dir, Util.sprintf("%s.assembly_parameters.xml", assemble.base));
 			ConfigurationIO.writeConfiguration(assemble, configuration_file);
 			
@@ -424,6 +453,13 @@ public class IsoSCM {
 			AssembleCommand assemblyConfiguration = ConfigurationIO.readAssemblyConfiguration(enumerate.assemblyXml);
 			
 			File out_dir = assemble.dir;
+			
+			File log_file = FileUtils.getFile(compare.dir, Util.sprintf("%s.enumerate.log", assemble.base));
+			// specify the log file for assembly
+			ThreadContext.put("log_file", log_file.getAbsolutePath());
+			
+			logger.info("Starting enumerate ...");
+			
 			File configuration_xml = FileUtils.getFile(out_dir, Util.sprintf("%s.enumerate_parameters.xml", assemble.base));
 			ConfigurationIO.writeConfiguration(enumerate, configuration_xml);
 			
@@ -438,6 +474,12 @@ public class IsoSCM {
 		else if(jc.getParsedCommand().equals("compare")){
 			if(!compare.dir.exists())
 				compare.dir.mkdirs();
+			
+			File log_file = FileUtils.getFile(compare.dir, Util.sprintf("%s.compare.log", compare.base));
+			// specify the log file for assembly
+			ThreadContext.put("log_file", log_file.getAbsolutePath());
+			
+			logger.info("Starting compare ...");
 			
 			File configuration_xml = FileUtils.getFile(compare.dir,Util.sprintf("%s.compare_parameters.xml", compare.base));
 			ConfigurationIO.writeConfiguration(compare, configuration_xml);
@@ -463,7 +505,9 @@ public class IsoSCM {
 			double p=assemblyConfiguration1.segment_p;
 			double min_fold=assemblyConfiguration1.min_fold;
 			
-			JointSegmentation.performJointSegmentation(assemblyConfiguration1.base, assemblyConfiguration2.base, spliced_exon_gtf1, spliced_exon_gtf2, assemblyConfiguration1.bam, assemblyConfiguration2.bam, table, gtf,s1,s2, maxBins, binSize, minCP, alpha_0, beta_0, nb_r, r, p, min_fold);	
+			JointSegmentation.performJointSegmentation(assemblyConfiguration1.base, assemblyConfiguration2.base, spliced_exon_gtf1, spliced_exon_gtf2, assemblyConfiguration1.bam, assemblyConfiguration2.bam, table, gtf,s1,s2, maxBins, binSize, minCP, alpha_0, beta_0, nb_r, r, p, min_fold);
+			
+			logger.info("exiting ...");
 		}
 	}
 }

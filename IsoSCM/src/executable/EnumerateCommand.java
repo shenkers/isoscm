@@ -14,7 +14,7 @@ import com.beust.jcommander.converters.IntegerConverter;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 public class EnumerateCommand{	
     
-	@Parameter(names="-assembly_xml", description="configuration file from the assembly step", converter=FileConverter.class)
+	@Parameter(names="-x", description="configuration XML file from the assembly step", converter=FileConverter.class)
 	File assemblyXml;
 	
 	@Parameter(names="-max_isoforms", description="loci with more than this number of isoforms will be skipped", converter=IntegerConverter.class)

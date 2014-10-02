@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="src" path="config"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/itext"/>
 	<classpathentry kind="lib" path="lib/colt.jar" sourcepath="lib-src/colt-src.jar"/>
@@ -11,5 +12,7 @@
 	<classpathentry kind="lib" path="lib/commons-collections-3.2.1.jar" sourcepath="lib-src/commons-collections-3.2.1-sources.jar"/>
 	<classpathentry kind="lib" path="lib/commons-lang-2.5.jar" sourcepath="lib-src/commons-lang-2.5-sources.jar"/>
 	<classpathentry kind="lib" path="lib/commons-io-2.4.jar" sourcepath="lib-src/commons-io-2.4-sources.jar"/>
+	<classpathentry kind="lib" path="lib/log4j-api-2.0.2.jar" sourcepath="lib-src/log4j-api-2.0.2-sources.jar"/>
+	<classpathentry kind="lib" path="lib/log4j-core-2.0.2.jar" sourcepath="lib-src/log4j-core-2.0.2-sources.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+	<Appenders>
+		<Console name="Console" target="SYSTEM_OUT">
+			<PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+		</Console>
+		<Routing name="LogRouter">
+			<Routes pattern="${ctx:log_file}">
+				<Route>
+					<RollingFile name="log_file" fileName="${ctx:log_file}" filePattern="${ctx:log_file}">
+						<PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+					    <Policies>
+							<OnStartupTriggeringPolicy/>
+						</Policies>
+					</RollingFile>
+				</Route>
+			</Routes>
+		</Routing>
+	</Appenders>
+	<Loggers>
+		<Root level="info">
+			<AppenderRef ref="Console"/>
+			<AppenderRef ref="LogRouter"/>
+		</Root>
+	</Loggers>
+</Configuration>
