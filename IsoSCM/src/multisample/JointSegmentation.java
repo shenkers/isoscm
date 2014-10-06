@@ -207,7 +207,7 @@ public class JointSegmentation {
 
 				double[] usage = new double[sfrs.length];
 				for (int i = 0; i < sfrs.length; i++) {
-					usage[i] = 1-(cp.cov_downstream[i]/cp.cov_upstream[i]);
+					usage[i] =  1-Math.min((cp.cov_downstream[i]/cp.cov_upstream[i]),1);
 				}
 
 				// write all change points, we'll filter out later when we decide on parameters...

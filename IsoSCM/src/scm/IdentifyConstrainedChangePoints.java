@@ -751,7 +751,8 @@ public class IdentifyConstrainedChangePoints {
 				 */
 
 				boolean any_satisfy_constraints = false;
-
+				boolean all_positive_upstream = true;
+				
 				double log_p_t_s = 0;
 
 				double[] extremes = new double[y.length];
@@ -763,20 +764,23 @@ public class IdentifyConstrainedChangePoints {
 //					
 					Boolean satisfies_decreasing = null;
 					Boolean satisfies_fold = null;
+					
 					if(constrain_decreasing){
 						double fold = next_mle/segment_mle[i][t][s];
 						satisfies_fold = fold <= min_fold;
 						satisfies_decreasing = map_mle[i][s+1].getMaxObject() < (segment_mle[i][t][s]);
+						all_positive_upstream &= segment_mle[i][t][s] > 0;
 					}
 					else{
 						double fold = segment_mle[i][t][s]/next_mle;
 						satisfies_fold = fold <= min_fold;
 						satisfies_decreasing = (segment_mle[i][t][s]) < map_mle[i][s+1].getMaxObject();
+						all_positive_upstream &= next_mle > 0;
 					}
 					any_satisfy_constraints |= (satisfies_fold && satisfies_decreasing);
 				}
 				
-				if(!any_satisfy_constraints){
+				if(!(any_satisfy_constraints&&all_positive_upstream)){
 					map[t].put(s+1, Double.NEGATIVE_INFINITY);			
 					for(int i=0; i<y.length; i++){
 					map_mle[i][t].put(extremes[i], Double.NEGATIVE_INFINITY);
@@ -808,7 +812,7 @@ public class IdentifyConstrainedChangePoints {
 
 				for(int i=0; i<y.length; i++){
 					double extreme = constrain_decreasing ? Math.max(map_mle[i][s+1].getMaxObject(),segment_mle[i][t][s]) : Math.min(map_mle[i][s+1].getMaxObject(),segment_mle[i][t][s]);
-						if(!(any_satisfy_constraints)){
+						if(!(any_satisfy_constraints&&all_positive_upstream)){
 						map_mle[i][t].put(extreme, Double.NEGATIVE_INFINITY);
 						nxt_mle[i][t].put(segment_mle[i][t][s], Double.NEGATIVE_INFINITY);
 					}
@@ -819,7 +823,7 @@ public class IdentifyConstrainedChangePoints {
 					}
 				}
 
-				if(!(any_satisfy_constraints)){
+				if(!(any_satisfy_constraints&&all_positive_upstream)){
 					map[t].put(s+1, Double.NEGATIVE_INFINITY);
 				}
 				else{
