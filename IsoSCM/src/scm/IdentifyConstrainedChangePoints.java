@@ -10,6 +10,8 @@ import multisample.JointSegmentationResult;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.math3.special.Beta;
 import org.apache.commons.math3.special.Gamma;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import util.Util;
 import util.Util.ExtremeObjectTracker;
@@ -20,7 +22,7 @@ import cern.jet.random.engine.RandomEngine;
 
 public class IdentifyConstrainedChangePoints {
 
-
+	final static Logger l = LogManager.getLogger();
 
 	/*
 	 * Calculate the probability of every sequence from (s,t) of observations
@@ -622,28 +624,12 @@ public class IdentifyConstrainedChangePoints {
 			log_G[i] = Util.logSum(Util.list(log_G[i],log_g[i]));
 		}
 
-		//		double aBeta = 1;
-		//		double bBeta = 8;
-		//		double zBeta = Beta.logBeta(aBeta, bBeta);
-
-		//TODO put log_G instead of log_g when t=0
-		//TODO make sure log_G = logsum, not log_G += logsum
-		//TODO make sure log_g = nb(i) not nb(i+1) so that sums to 1
-		//TODO make sure that the length r is bigger than 1 to assign non-zero probs to long segments
-
 		// perform the recursions
 		for(int t=n-1; t>-1; t--){
 			List<Double> log_probs = new ArrayList<Double>();
 
 			for(int s=t; s<n-1; s++){
 				// find the most likely position of the positions of the next change point
-
-				//				if(t==0 || t==299)
-				//				System.out.printf("(%d,%d) all %.1f < %.1f map s+1 %.1f %d\n", t,s, segment_mle[t][s], map_mle[s+1].getMaxObject(),map[s+1].getMax(),map[s+1].getMaxObject());
-				//				if(map_mle[s+1].getMaxObject() > segment_mle[t][s])
-				//					System.out.printf("(%d,%d) fail %.1f < %.1f\n", t,s, segment_mle[t][s], map_mle[s+1].getMaxObject());
-
-				//				if(map_mle[s+1].getMaxObject() > segment_mle[t][s])
 
 				/*
 				 * The constraint: if the MLE of the next segment is greater than this segment, or the probability of 
@@ -652,9 +638,7 @@ public class IdentifyConstrainedChangePoints {
 
 				double next_mle = nxt_mle[s+1].getMaxObject();
 				double extreme = constrain_decreasing ? Math.max(map_mle[s+1].getMaxObject(),segment_mle[t][s]) : Math.min(map_mle[s+1].getMaxObject(),segment_mle[t][s]);
-				//				if(map_mle[s+1].getMaxObject() > (segment_mle[t][s]+1) || map[s+1].getMax() == Double.NEGATIVE_INFINITY){
-				//				System.out.printf("(%d,%d) this %.2f next %.2f\n", t, s, segment_mle[t][s] , next_mle);
-
+			
 				Boolean fails_constraint = null;
 				if(constrain_decreasing){
 					double fold = next_mle/segment_mle[t][s];
@@ -673,9 +657,9 @@ public class IdentifyConstrainedChangePoints {
 				}
 				else{ 
 					double p_segment_length = t==0? Math.log(1 - Math.exp(log_G[s])) : log_g[s-t];
-					map[t].put(s+1, log_p[t][s]+map[s+1].getMaxObject()+ p_segment_length);
-					map_mle[t].put(extreme, log_p[t][s]+map[s+1].getMaxObject()+ p_segment_length);
-					nxt_mle[t].put(segment_mle[t][s], log_p[t][s]+map[s+1].getMaxObject()+ p_segment_length);
+					map[t].put(s+1, log_p[t][s]+map[s+1].getMax()+ p_segment_length);
+					map_mle[t].put(extreme, log_p[t][s]+map[s+1].getMax()+ p_segment_length);
+					nxt_mle[t].put(segment_mle[t][s], log_p[t][s]+map[s+1].getMax()+ p_segment_length);
 				}
 
 				// sum over the positions of the next change point
@@ -689,10 +673,6 @@ public class IdentifyConstrainedChangePoints {
 			nxt_mle[t].put(segment_mle[t][n-1], log_p[t][n-1] + Math.log(1 - Math.exp(log_G[n-t-1])));
 			log_probs.add(log_p[t][n-1] + Math.log(1 - Math.exp(log_G[n-t-1])));
 			
-//			map[t].put(n, log_p[t][n-1] + log_g[n-t-1]);
-//			map_mle[t].put(segment_mle[t][n-1], log_p[t][n-1] + log_g[n-t-1]);
-//			nxt_mle[t].put(segment_mle[t][n-1], log_p[t][n-1] + log_g[n-t-1]);
-//			log_probs.add(log_p[t][n-1] + log_g[n-t-1]);
 			log_q[t] = Util.logSum(log_probs);
 		}
 
@@ -703,63 +683,17 @@ public class IdentifyConstrainedChangePoints {
 		int first = 0;
 		int last = map[0].getMaxObject();
 		mapMLEs.add(segment_mle[first][last-1]);
-		//		System.out.println(map_mle[0].getMax());
-		//		System.out.println(map_mle[0].getMaxObject());
-		//		System.out.printf("last %d ll %.1f max %.1f\n", first, map_mle[first].getMax(), map_mle[first].getMaxObject());
-
+	
 		while(last<n){
-			//			System.out.println(Util.list(Util.list(first,last-1),Util.list(last,map[last].getExtreme()-1)));
-			//			System.out.println(Util.list(segment_mle[first][last-1],segment_mle[last][map[last].getExtreme()-1]));
-			//			System.out.println(Util.list(map[last].getExtreme(),n,map[last].getExtremeValue()));
-
-			//			System.out.printf("last %d ll %.1f max %.1f\n", last, map_mle[last].getMax(), map_mle[last].getMaxObject());
-			//			System.out.println(map_mle[last].getMax());
-			//			System.out.println(map_mle[last].getMaxObject());
 			mapCPs.add(last-1);
 			first = last;
 			last = map[last].getMaxObject();
 			mapMLEs.add(segment_mle[first][last-1]);
 		}
 
-		/*
-		 * calculate the increase in likelihood for adding a change point
-		if(mapCPs.size()>0){
-			
-		for(int i=0; i<mapCPs.size(); i++){
-			int prev = -1;
-			int next = -1;
-			if(i==0){
-				prev=0;
-			}
-			else{
-				prev = mapCPs.get(i-1);
-			}
-			if(i==mapCPs.size()-1){
-				next = n-1;
-			}
-			else{
-				next = mapCPs.get(i+1);
-			}
-			System.out.printf("prev %d next %d i %d p %.3e\n", prev,next,i,(log_p[prev+1][mapCPs.get(i)]+log_p[mapCPs.get(i)+1][next]-log_p[prev+1][next]));
-			
-			System.out.println(i+" "+(log_p[prev+1][mapCPs.get(i)]+log_p[mapCPs.get(i)+1][next]-log_p[prev+1][next]));
-		}
-		}
-		*/
-		//		System.out.println(mapCPs);
-		//		System.out.println(mapMLEs);
 
 		SegmentationResult segmentation = new SegmentationResult(ArrayUtils.toPrimitive(mapCPs.toArray(new Integer[0])), ArrayUtils.toPrimitive(mapMLEs.toArray(new Double[0])), ArrayUtils.toPrimitive(mapLs.toArray(new Double[0])), n);
-		//		System.out.println(Util.list(segmentation.segments()));
-		//		mapCP.add(last);
-		//		ensembl.add(mapCPs);
-
-		//
-		//		List<List<Integer>> ensembl = sample_ensembl(log_p, log_q, log_g, log_G, 50);
-		//		plotEnsembl2(ensembl, 0, y.length-1);
-		//		plotEnsembl3(ensembl, y);
-		//			
-		//		ChartUtils.showChart(ChartUtils.createLineChart(Util.map(Util.list("","1","2","4"),Util.enlist(data,data2,data3,data4)), "", "", "", false));
+	
 		return segmentation;
 	}
 
@@ -780,13 +714,14 @@ public class IdentifyConstrainedChangePoints {
 			segment_mle[i] = results[i].segment_mle;
 		}
 
+
+
+
 		// length probability density function
 		double[] log_g = new double[n];
 		// length cumulative density function
 		double[] log_G = new double[n];
-		double[] g0 = new double[n];
-		double[] G0 = new double[n];
-
+	
 		//TODO can integrate over the length of the first segment like Fearnhead
 
 		log_G[0] = Double.NEGATIVE_INFINITY;
@@ -806,57 +741,92 @@ public class IdentifyConstrainedChangePoints {
 
 		// perform the recursions
 		for(int t=n-1; t>-1; t--){
-
+		
 			for(int s=t; s<n-1; s++){
 				// find the most likely position of the positions of the next change point
 
-					/*
-					 * The constraint: if the MLE of the next segment is greater than this segment, or the probability of 
-					 * the next segment is 0, 
-					 */
+				/*
+				 * The constraint: if the MLE of the next segment is greater than this segment, or the probability of 
+				 * the next segment is 0, 
+				 */
 
-					boolean any_satisfy_fold = false;
+				boolean any_satisfy_constraints = false;
 
-					double log_p_t_s = 0;
+				double log_p_t_s = 0;
 
-					for(int i=0; i<y.length; i++){
-						log_p_t_s += log_p[i][t][s];
+				double[] extremes = new double[y.length];
+				for(int i=0; i<y.length; i++){
+					log_p_t_s += log_p[i][t][s];
 
-						double next_mle = nxt_mle[i][s+1].getMaxObject();
-
-						Boolean satisfies_fold = null;
-						if(constrain_decreasing){
-							double fold = next_mle/segment_mle[i][t][s];
-							satisfies_fold = fold <= min_fold;
-						}
-						else{
-							double fold = segment_mle[i][t][s]/next_mle;
-							satisfies_fold = fold <= min_fold;
-						}
-						any_satisfy_fold |= satisfies_fold;
-					}
-
-					for(int i=0; i<y.length; i++){
-						double extreme = constrain_decreasing ? Math.max(map_mle[i][s+1].getMaxObject(),segment_mle[i][t][s]) : Math.min(map_mle[i][s+1].getMaxObject(),segment_mle[i][t][s]);
-						if(!(any_satisfy_fold)){
-							map_mle[i][t].put(extreme, Double.NEGATIVE_INFINITY);
-							nxt_mle[i][t].put(segment_mle[i][t][s], Double.NEGATIVE_INFINITY);
-						}
-						else{ 
-							double p_segment_length = t==0? Math.log(1 - Math.exp(log_G[s])) : log_g[s-t];
-							map_mle[i][t].put(extreme, log_p_t_s+map[s+1].getMaxObject()+ p_segment_length);
-							nxt_mle[i][t].put(segment_mle[i][t][s], log_p_t_s+map[s+1].getMaxObject()+ p_segment_length);
-						}
-					}
-
-					if(!(any_satisfy_fold)){
-						map[t].put(s+1, Double.NEGATIVE_INFINITY);
+					double next_mle = nxt_mle[i][s+1].getMaxObject();
+					extremes[i] = constrain_decreasing ? Math.max(map_mle[i][s+1].getMaxObject(),segment_mle[i][t][s]) : Math.min(map_mle[i][s+1].getMaxObject(),segment_mle[i][t][s]);
+//					
+					Boolean satisfies_decreasing = null;
+					Boolean satisfies_fold = null;
+					if(constrain_decreasing){
+						double fold = next_mle/segment_mle[i][t][s];
+						satisfies_fold = fold <= min_fold;
+						satisfies_decreasing = map_mle[i][s+1].getMaxObject() < (segment_mle[i][t][s]);
 					}
 					else{
-						double p_segment_length = t==0? Math.log(1 - Math.exp(log_G[s])) : log_g[s-t];
-						map[t].put(s+1, log_p_t_s+map[s+1].getMaxObject()+ p_segment_length);
+						double fold = segment_mle[i][t][s]/next_mle;
+						satisfies_fold = fold <= min_fold;
+						satisfies_decreasing = (segment_mle[i][t][s]) < map_mle[i][s+1].getMaxObject();
 					}
+					any_satisfy_constraints |= (satisfies_fold && satisfies_decreasing);
+				}
 				
+				if(!any_satisfy_constraints){
+					map[t].put(s+1, Double.NEGATIVE_INFINITY);			
+					for(int i=0; i<y.length; i++){
+					map_mle[i][t].put(extremes[i], Double.NEGATIVE_INFINITY);
+						nxt_mle[i][t].put(segment_mle[i][t][s], Double.NEGATIVE_INFINITY);
+					}
+				}
+				else{
+					double p_segment_length = t==0? Math.log(1 - Math.exp(log_G[s])) : log_g[s-t];
+					map[t].put(s+1, log_p_t_s+map[s+1].getMax()+ p_segment_length);
+					for(int i=0; i<y.length; i++){
+						map_mle[i][t].put(extremes[i], log_p_t_s+map[s+1].getMax()+ p_segment_length);
+						nxt_mle[i][t].put(segment_mle[i][t][s], log_p_t_s+map[s+1].getMax()+ p_segment_length);
+					}
+				}
+				
+				/*
+				 * 	if(fails_constraint){
+					map[t].put(s+1, Double.NEGATIVE_INFINITY);			
+					map_mle[t].put(extreme, Double.NEGATIVE_INFINITY);
+					nxt_mle[t].put(segment_mle[t][s], Double.NEGATIVE_INFINITY);
+				}
+				else{ 
+					double p_segment_length = t==0? Math.log(1 - Math.exp(log_G[s])) : log_g[s-t];
+					map[t].put(s+1, log_p[t][s]+map[s+1].getMaxObject()+ p_segment_length);
+					map_mle[t].put(extreme, log_p[t][s]+map[s+1].getMaxObject()+ p_segment_length);
+					nxt_mle[t].put(segment_mle[t][s], log_p[t][s]+map[s+1].getMaxObject()+ p_segment_length);
+				}
+				 */
+
+				for(int i=0; i<y.length; i++){
+					double extreme = constrain_decreasing ? Math.max(map_mle[i][s+1].getMaxObject(),segment_mle[i][t][s]) : Math.min(map_mle[i][s+1].getMaxObject(),segment_mle[i][t][s]);
+						if(!(any_satisfy_constraints)){
+						map_mle[i][t].put(extreme, Double.NEGATIVE_INFINITY);
+						nxt_mle[i][t].put(segment_mle[i][t][s], Double.NEGATIVE_INFINITY);
+					}
+					else{ 
+						double p_segment_length = t==0? Math.log(1 - Math.exp(log_G[s])) : log_g[s-t];
+						map_mle[i][t].put(extreme, log_p_t_s+map[s+1].getMax()+ p_segment_length);
+						nxt_mle[i][t].put(segment_mle[i][t][s], log_p_t_s+map[s+1].getMax()+ p_segment_length);
+					}
+				}
+
+				if(!(any_satisfy_constraints)){
+					map[t].put(s+1, Double.NEGATIVE_INFINITY);
+				}
+				else{
+					double p_segment_length = t==0? Math.log(1 - Math.exp(log_G[s])) : log_g[s-t];
+					map[t].put(s+1, log_p_t_s+map[s+1].getMax()+ p_segment_length);
+				}
+
 			}
 
 			double log_p_t_s = 0;
@@ -864,14 +834,13 @@ public class IdentifyConstrainedChangePoints {
 			for(int i=0; i<y.length; i++){
 				log_p_t_s += log_p[i][t][n-1];
 			}
-
 			// the probability of there being no more changepoints
+
 			map[t].put(n, log_p_t_s + Math.log(1 - Math.exp(log_G[n-t-1])));
 			for(int i=0; i<y.length; i++){
-				map_mle[i][t].put(segment_mle[i][t][n-1], log_p_t_s + Math.log(1 - Math.exp(log_G[n-t-1])));
-				nxt_mle[i][t].put(segment_mle[i][t][n-1], log_p_t_s + Math.log(1 - Math.exp(log_G[n-t-1])));
+			map_mle[i][t].put(segment_mle[i][t][n-1], log_p_t_s + Math.log(1 - Math.exp(log_G[n-t-1])));
+			nxt_mle[i][t].put(segment_mle[i][t][n-1], log_p_t_s + Math.log(1 - Math.exp(log_G[n-t-1])));
 			}
-			
 		}
 
 		List<Integer> mapCPs = new ArrayList<Integer>();
@@ -879,37 +848,232 @@ public class IdentifyConstrainedChangePoints {
 		List<Double> mapLs = new ArrayList<Double>();
 		int first = 0;
 		int last = map[0].getMaxObject();
-
+		
 		Double[] mle = new Double[y.length];
 		for(int i=0; i<y.length; i++){
 			mle[i] = segment_mle[i][first][last-1];
 		}
-
+		
 		mapMLEs.add(mle);
-
+	
 		while(last<n){
 			mapCPs.add(last-1);
 			first = last;
 			last = map[last].getMaxObject();
 			mle = new Double[y.length];
-
+			
 			for(int i=0; i<y.length; i++){
 				mle[i] = segment_mle[i][first][last-1];
 			}
-
+			
 			mapMLEs.add(mle);
 		}
-
+	
 		double[][] mles = new double[mapMLEs.size()][y.length];
 		for(int i=0; i<mapMLEs.size(); i++){
-			for(int j=0; j<y.length; j++){
-				mles[i][j] = mapMLEs.get(i)[j];
+		for(int j=0; j<y.length; j++){
+			mles[i][j] = mapMLEs.get(i)[j];
+		}
+		}
+		
+		JointSegmentationResult segmentation = new JointSegmentationResult(ArrayUtils.toPrimitive(mapCPs.toArray(new Integer[0])),	mles, ArrayUtils.toPrimitive(mapLs.toArray(new Double[0])), n);
+	
+		return segmentation;
+	}
+	
+	/**
+	 * 
+	 * @param nSegments
+	 * @param y
+	 * @param alpha_0
+	 * @param beta_0
+	 * @param nb_r
+	 * @param r
+	 * @param p
+	 * @param constrain_decreasing
+	 * @param min_fold
+	 * @return change-point for a fixed number of segments
+	 */
+	public static JointSegmentationResult fixed_n_joint_segmentation(int nSegments, double[][] y, double alpha_0, double beta_0, int nb_r, int r, double p, boolean constrain_decreasing, double min_fold){
+		//		if(!constrain_decreasing)
+		//			throw new RuntimeException("unimplemented");
+		int n = y[0].length;
+
+		@SuppressWarnings("unchecked")
+		// The most likely start position of the segment following a changepoint at position i
+		ExtremeObjectTracker<Integer, Double>[][] map = new ExtremeObjectTracker[nSegments][n];
+		double[][][] log_p = new double[y.length][][];
+		double[][][] segment_mle = new double[y.length][][];
+
+		SCMResult[] results = new SCMResult[y.length];
+		for(int i=0; i<y.length; i++){
+			results[i] = calculate_segment_probabilities(y[i], alpha_0, beta_0, nb_r);
+			log_p[i] = results[i].log_p;
+			segment_mle[i] = results[i].segment_mle;
+		}
+
+
+
+
+		// length probability density function
+		double[] log_g = new double[n];
+		// length cumulative density function
+		double[] log_G = new double[n];
+		double[] g0 = new double[n];
+		double[] G0 = new double[n];
+
+		//TODO can integrate over the length of the first segment like Fearnhead
+
+		log_G[0] = Double.NEGATIVE_INFINITY;
+
+		// pre-compute the length functions
+		for(int i=0; i<n; i++){
+			log_g[i] = log_nb(i, r, p);
+			if(i>0)
+				log_G[i] = log_G[i-1];
+			l.info("log_G[i]={}",log_G[i]);
+			l.info("log_g[i]={}",log_g[i]);
+			log_G[i] = Util.logSum(Util.list(log_G[i],log_g[i]));
+			l.info("2 log_G[i]={}",log_g[i]);
+		}
+		// initialize datastructures
+		for(int m=0; m<nSegments; m++){
+		for(int i=0; i<n; i++){
+			map[m][i] = new ExtremeObjectTracker<Integer, Double>(new Util.ComparableComparator<Double>());
+		}
+		}
+		
+		// calculate for last segment
+		{
+			int m=nSegments-1;
+			for(int t=n-1; t>m-1; t--){
+				l.info("{}th segment start t={}",m+2,t);
+				
+				double log_p_t_s = 0;
+				double p_segment_length = Math.log(1 - Math.exp(log_G[n-t]));
+				l.info("segment probability {}",p_segment_length);
+				
+				for(int i=0; i<y.length; i++){
+					l.info("length log_p[i][t] = {}",log_p[i][t].length);
+					l.info("likelihood sample {} = {}",i,log_p[i][t][n-1]);
+					log_p_t_s += log_p[i][t][n-1];
+				}
+				
+				double log_likelihood = p_segment_length + log_p_t_s;
+			
+				l.info("likelihood last segment starts at {} = {}",t+1,log_likelihood);
+				
+				map[m][t].put(n, log_likelihood);
 			}
 		}
 
+		l.info("sequence length n={}",n);
+		for(int m=nSegments-2; m>-1; m--){
+			l.info("change point index m={}",m);
+		// perform the recursions
+		for(int t=n-1; t>m-1; t--){
+			l.info("change point index m={}",m);
+				l.info("segment start, the index of the previous change point t={}",t);
+			
+				l.info("s<{}",n-1-(nSegments-m));
+			for(int s=t; s<n-1-(nSegments-m-1); s++){
+				l.info("change point index m={}",m);
+				l.info("segment start t={}",t);
+							l.info("segment end s={}",s);
+				
+				// find the most likely position of the positions of the next change point
+
+				/*
+				 * The constraint: if the MLE of the next segment is greater than this segment, or the probability of 
+				 * the next segment is 0, 
+				 */
+
+				boolean any_satisfy_fold = false;
+
+				double log_p_t_s = 0;
+
+				for(int i=0; i<y.length; i++){
+					log_p_t_s += log_p[i][t][s];
+
+				}
+
+//				for(int i=0; i<y.length; i++){
+//						if(!(any_satisfy_fold)){
+//						map_mle[m][i][t].put(extreme, Double.NEGATIVE_INFINITY);
+//						nxt_mle[m][i][t].put(segment_mle[i][t][s], Double.NEGATIVE_INFINITY);
+//					}
+//					else{ 
+//						double p_segment_length = t==0? Math.log(1 - Math.exp(log_G[s])) : log_g[s-t];
+//					}
+//				}
+				l.info("is null? => {}",map[m+1][s+1].getMax());
+
+//				if(!(any_satisfy_fold)){
+//					map[m][t].put(s+1, Double.NEGATIVE_INFINITY);
+//				}
+//				else{
+					double p_segment_length = t==0? Math.log(1 - Math.exp(log_G[s])) : log_g[s-t];
+					map[m][t].put(s+1, log_p_t_s+map[m+1][s+1].getMax()+ p_segment_length);
+//				}
+
+			}
+
+			}
+		}
+
+		//		List<List<Integer>> ensembl = new ArrayList<List<Integer>>();
+		List<Integer> mapCPs = new ArrayList<Integer>();
+		List<Double[]> mapMLEs = new ArrayList<Double[]>();
+		List<Double> mapLs = new ArrayList<Double>();
+		int m=0;
+		int first = 0;
+		int last = map[m][0].getMaxObject();
+		l.info("traceback m={}",m);
+		l.info("traceback max index for m last={}",map[m][0].getMaxObject());
+		l.info("traceback max value={}",map[m][0].getMax());
+		
+		Double[] mle = new Double[y.length];
+		for(int i=0; i<y.length; i++){
+			mle[i] = segment_mle[i][first][last-1];
+		}
+		
+		mapMLEs.add(mle);
+	
+		for(m=1; m<nSegments; m++){
+			l.info("traceback m={}",m);
+			l.info("traceback max index for m last={}",map[m][last].getMaxObject());
+			l.info("traceback max value={}",map[m][last].getMax());
+			mapCPs.add(last-1);
+			first = last;
+			last = map[m][last].getMaxObject();
+			mle = new Double[y.length];
+			
+			for(int i=0; i<y.length; i++){
+				mle[i] = segment_mle[i][first][last-1];
+			}
+			
+			mapMLEs.add(mle);
+		}
+		
+		double[][] mles = new double[mapMLEs.size()][y.length];
+		for(int i=0; i<mapMLEs.size(); i++){
+		for(int j=0; j<y.length; j++){
+			mles[i][j] = mapMLEs.get(i)[j];
+		}
+		}
+		
 
 		JointSegmentationResult segmentation = new JointSegmentationResult(ArrayUtils.toPrimitive(mapCPs.toArray(new Integer[0])),	mles, ArrayUtils.toPrimitive(mapLs.toArray(new Double[0])), n);
-		
+		//		System.out.println(Util.list(segmentation.segments()));
+		//		mapCP.add(last);
+		//		ensembl.add(mapCPs);
+
+		//
+		//		List<List<Integer>> ensembl = sample_ensembl(log_p, log_q, log_g, log_G, 50);
+		//		plotEnsembl2(ensembl, 0, y.length-1);
+		//		plotEnsembl3(ensembl, y);
+		//			
+		//		ChartUtils.showChart(ChartUtils.createLineChart(Util.map(Util.list("","1","2","4"),Util.enlist(data,data2,data3,data4)), "", "", "", false));
 		return segmentation;
 	}
 
@@ -950,29 +1114,12 @@ public class IdentifyConstrainedChangePoints {
 			log_G[i] = Util.logSum(Util.list(log_G[i],log_g[i]));
 		}
 
-		//		double aBeta = 1;
-		//		double bBeta = 8;
-		//		double zBeta = Beta.logBeta(aBeta, bBeta);
-		//		double min_fold = .5;
-
-		//TODO put log_G instead of log_g when t=0
-		//TODO make sure log_G = logsum, not log_G += logsum
-		//TODO make sure log_g = nb(i) not nb(i+1) so that sums to 1
-		//TODO make sure that the length r is bigger than 1 to assign non-zero probs to long segments
-
 		// perform the recursions
 		for(int t=n-1; t>-1; t--){
 			List<Double> log_probs = new ArrayList<Double>();
 
 			for(int s=t; s<n-1; s++){
 				// find the most likely position of the positions of the next change point
-
-				//				if(t==0 || t==299)
-				//				System.out.printf("(%d,%d) all %.1f < %.1f map s+1 %.1f %d\n", t,s, segment_mle[t][s], map_mle[s+1].getMaxObject(),map[s+1].getMax(),map[s+1].getMaxObject());
-				//				if(map_mle[s+1].getMaxObject() > segment_mle[t][s])
-				//					System.out.printf("(%d,%d) fail %.1f < %.1f\n", t,s, segment_mle[t][s], map_mle[s+1].getMaxObject());
-
-				//				if(map_mle[s+1].getMaxObject() > segment_mle[t][s])
 
 				/*
 				 * The constraint: if the MLE of the next segment is greater than this segment, or the probability of 
@@ -999,8 +1146,8 @@ public class IdentifyConstrainedChangePoints {
 				}
 				else{ 
 					double p_segment_length = t==0? Math.log(1 - Math.exp(log_G[s])) : log_g[s-t];
-					map[t].put(s+1, log_p[t][s]+map[s+1].getMaxObject()+ p_segment_length);
-					nxt_mle[t].put(segment_mle[t][s], log_p[t][s]+map[s+1].getMaxObject()+ p_segment_length);
+					map[t].put(s+1, log_p[t][s]+map[s+1].getMax()+ p_segment_length);
+					nxt_mle[t].put(segment_mle[t][s], log_p[t][s]+map[s+1].getMax()+ p_segment_length);
 				}
 
 				// sum over the positions of the next change point
@@ -1015,7 +1162,6 @@ public class IdentifyConstrainedChangePoints {
 			log_q[t] = Util.logSum(log_probs);
 		}
 
-		//		List<List<Integer>> ensembl = new ArrayList<List<Integer>>();
 		List<Integer> mapCPs = new ArrayList<Integer>();
 		List<Double> mapMLEs = new ArrayList<Double>();
 		List<Double> mapLs = new ArrayList<Double>();
@@ -1030,20 +1176,8 @@ public class IdentifyConstrainedChangePoints {
 			mapMLEs.add(segment_mle[first][last-1]);
 		}
 
-		//		System.out.println(mapCPs);
-		//		System.out.println(mapMLEs);
-
 		SegmentationResult segmentation = new SegmentationResult(ArrayUtils.toPrimitive(mapCPs.toArray(new Integer[0])), ArrayUtils.toPrimitive(mapMLEs.toArray(new Double[0])), ArrayUtils.toPrimitive(mapLs.toArray(new Double[0])), n);
-		//		System.out.println(Util.list(segmentation.segments()));
-		//		mapCP.add(last);
-		//		ensembl.add(mapCPs);
-
-		//
-		//		List<List<Integer>> ensembl = sample_ensembl(log_p, log_q, log_g, log_G, 50);
-		//		plotEnsembl2(ensembl, 0, y.length-1);
-		//		plotEnsembl3(ensembl, y);
-		//			
-		//		ChartUtils.showChart(ChartUtils.createLineChart(Util.map(Util.list("","1","2","4"),Util.enlist(data,data2,data3,data4)), "", "", "", false));
+	
 		return segmentation;
 	}
 
