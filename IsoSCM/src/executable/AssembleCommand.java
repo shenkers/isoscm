@@ -19,9 +19,6 @@ public class AssembleCommand{
 	@Parameter(names="-bam", description="bam file to be segmented", converter=FileConverter.class)
 	File bam;
 
-	@Parameter(names="-stringency", description="stringency for BAM format checking")
-	String stringency;
-
 	@Parameter(names="-t", description="the threshold above which a segment is considered expressed", converter=IntegerConverter.class)
 	int threshold=1;
 
@@ -71,16 +68,13 @@ public class AssembleCommand{
 	@Parameter(names="-jnct_alpha", description="The significance level for binomial test to accept splice junction", converter=DoubleConverter.class)
 	double jnct_alpha = 0.05;
 
-	@Parameter(names="-merge_segments", description="Optional:bed file of regions to merge across")
-	String filled_gap_segments;
+	@Parameter(names="-merge_segments", description="Optional:bed file of regions to merge across", converter=FileConverter.class)
+	File filled_gap_segments;
 
 	public File getBam() {
 		return bam;
 	}
-	public String getStringency() {
-		return stringency;
-	}
-
+	
 	public int getThreshold() {
 		return threshold;
 	}
@@ -141,7 +135,7 @@ public class AssembleCommand{
 		return jnct_alpha;
 	}
 
-	public String getFilled_gap_segments() {
+	public File getFilled_gap_segments() {
 		return filled_gap_segments;
 	}
 
@@ -150,10 +144,6 @@ public class AssembleCommand{
 		this.bam = bam;
 	}
 
-	@XmlElement
-	public void setStringency(String stringency) {
-		this.stringency = stringency;
-	}
 
 	@XmlElement
 	public void setThreshold(int threshold) {
@@ -231,7 +221,7 @@ public class AssembleCommand{
 	}
 
 	@XmlElement
-	public void setFilled_gap_segments(String filled_gap_segments) {
+	public void setFilled_gap_segments(File filled_gap_segments) {
 		this.filled_gap_segments = filled_gap_segments;
 	}
 }

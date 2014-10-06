@@ -35,56 +35,148 @@ import util.IO;
 import util.Util;
 
 import com.beust.jcommander.JCommander;
+import com.beust.jcommander.MissingCommandException;
+import com.beust.jcommander.ParameterException;
 
 public class IsoSCM {
 	private static final Logger logger = LogManager.getLogger();
 
-	public static void main(String[] args) throws IOException, JAXBException {
-		logger.info("Beginning IsoSCM ...");
+	public static void validateAssemble(AssembleCommand params){
+		boolean fails_validation = false;
+		StringBuilder msg = new StringBuilder();
+		if(params.strandedness==null){
+			fails_validation = true;
+			msg.append(Util.sprintf("Must specify the data strandedness (parameter '-s'). "));
+		}
+		if(params.bam.isDirectory()){
+			fails_validation = true;
+			msg.append(Util.sprintf("File '%s' is a directory, specify a BAM file (parameter -bam). ",params.bam));
+		}
+		if(!params.bam.exists()){
+			fails_validation = true;
+			msg.append(Util.sprintf("BAM file '%s' does not exist, specify a BAM file (parameter -bam). ",params.bam));
+		}
+		if(params.merge_radius<0){
+			fails_validation = true;
+			msg.append(Util.sprintf("merge_radius must be a non-negative integer (parameter -merge_radius). "));
+		}
+		if(params.w<0){
+			fails_validation = true;
+			msg.append(Util.sprintf("w must be a non-negative integer (parameter -w). "));
+		}
+		if(params.threshold<0){
+			fails_validation = true;
+			msg.append(Util.sprintf("t must be a non-negative integer (parameter -t). "));
+		}
+		if(params.nb_r<0){
+			fails_validation = true;
+			msg.append(Util.sprintf("nb_r must be a non-negative integer (parameter -nb_r). "));
+		}
+		if(params.min_fold<0 || params.min_fold > 1){
+			fails_validation = true;
+			msg.append(Util.sprintf("min_fold must be in the range [ 0.0 - 1.0 ] (parameter -min_fold). "));
+		}
+		if(params.jnct_alpha<0 || params.jnct_alpha > 1){
+			fails_validation = true;
+			msg.append(Util.sprintf("jnct_alpha must be in the range [ 0.0 - 1.0 ] (parameter -jnct_alpha). "));
+		}
+		if(params.insert_size_quantile!=null && (params.insert_size_quantile<0 || params.insert_size_quantile > 1)){
+			fails_validation = true;
+			msg.append(Util.sprintf("insert_size_quantile must be in the range [ 0.0 - 1.0 ] (parameter -insert_size_quantile). "));
+		}
+		if(params.segment_p<0 || params.segment_p > 1){
+			fails_validation = true;
+			msg.append(Util.sprintf("segment_p must be in the range [ 0.0 - 1.0 ] (parameter -segment_p). "));
+		}
+		if(params.segment_r<0){
+			fails_validation = true;
+			msg.append(Util.sprintf("segment_r must be a non-negative integer (parameter -segment_r). "));
+		}
+		if(params.filled_gap_segments!=null && params.filled_gap_segments.isDirectory()){
+			fails_validation = true;
+			msg.append(Util.sprintf("File '%s' is a directory, specify a BAM file (parameter -filled_gap_segments). ",params.filled_gap_segments));
+		}
+		if(params.filled_gap_segments!=null && !params.filled_gap_segments.exists()){
+			fails_validation = true;
+			msg.append(Util.sprintf("BAM file '%s' does not exist, specify a BAM file (parameter -filled_gap_segments). ",params.filled_gap_segments));
+		}
 
-		
-//		FileAppender fa = AppenderRef.FileAppender.createAppender(fileName, append, locking, name, immediateFlush, ignore, bufferedIo, bufferSizeStr, layout, filter, advertise, advertiseUri, config)
-//		FileAppender fa = new FileAppender();
-//		  fa.setName("FileLogger");
-//		  fa.setFile("mylog.log");
-//		  fa.setLayout(new PatternLayout("%d %-5p [%c{1}] %m%n"));
-//		  fa.setThreshold(Level.DEBUG);
-//		  fa.setAppend(true);
-//		  fa.activateOptions();
-		
-//		args = new String[]{
-//				"assemble",
-//				"-bam", "/home/sol/lailab/sol/mel_yak_vir/total_rna/Y/H.bam",
-////				"-bam2", "/home/sol/lailab/sol/mel_yak_vir/total_rna/Y/T.bam",
-////				"-base1", "YH",
-////				"-base2", "YT",
-////				"-out_base", "/home/sol/Y.H.T",
-////				"-s", "reverse_forward",
-////				"-dir", "/home/sol/lailab/sol/mel_yak_vir/isoscm/Y/"
-//				};
-		
-		 
+		if(fails_validation)
+			throw new IllegalArgumentException(msg.toString());
+	}
+
+	public static void validateCompare(CompareCommand params){
+		boolean fails_validation = false;
+		StringBuilder msg = new StringBuilder();
+
+		if(params.assemblyXml1!=null && params.assemblyXml1.isDirectory()){
+			fails_validation = true;
+			msg.append(Util.sprintf("File '%s' is a directory, specify the XML parameter file for sample 1 (parameter -x1). ",params.assemblyXml1));
+		}
+		if(params.assemblyXml1!=null && !params.assemblyXml1.exists()){
+			fails_validation = true;
+			msg.append(Util.sprintf("File '%s' does not exist, specify the XML parameter file for sample 1 (parameter -x1). ",params.assemblyXml1));
+		}	
+		if(params.assemblyXml2!=null && params.assemblyXml2.isDirectory()){
+			fails_validation = true;
+			msg.append(Util.sprintf("File '%s' is a directory, specify the XML parameter file for sample 2 (parameter -x2). ",params.assemblyXml2));
+		}
+		if(params.assemblyXml2!=null && !params.assemblyXml2.exists()){
+			fails_validation = true;
+			msg.append(Util.sprintf("File '%s' does not exist, specify the XML parameter file for sample 2 (parameter -x2). ",params.assemblyXml2));
+		}	
+
+		if(fails_validation)
+			throw new IllegalArgumentException(msg.toString());
+	}
+
+	public static void validateEnumerate(EnumerateCommand params){
+		boolean fails_validation = false;
+		StringBuilder msg = new StringBuilder();
+
+		if(!params.assemblyXml.exists()){
+			fails_validation = true;
+			msg.append(Util.sprintf("File '%s' is a directory, specify the XML parameter file for sample 1 (parameter -x). ",params.assemblyXml));
+		}
+		if(!params.assemblyXml.exists()){
+			fails_validation = true;
+			msg.append(Util.sprintf("File '%s' does not exist, specify the XML parameter file for sample 1 (parameter -x). ",params.assemblyXml));
+		}		
+		if(params.max_paths<1){
+			fails_validation = true;
+			msg.append(Util.sprintf("max_isoforms must be greater than 0 (parameter -max_isoforms). "));
+		}
+
+		if(fails_validation)
+			throw new IllegalArgumentException(msg.toString());
+	}
+
+	public static void main(String[] args) throws IOException, JAXBException {
+
 		JCommander jc = new JCommander();
 		jc.setProgramName("java -jar IsoSCM.jar");
-		
+
 		AssembleCommand assemble = new AssembleCommand();
 		SegmentCommand segment = new SegmentCommand();
 		CompareCommand compare = new CompareCommand();
 		EnumerateCommand enumerate = new EnumerateCommand();
 		HelpCommand help = new HelpCommand();
-		
+
 		jc.addCommand("assemble", assemble);
 		jc.addCommand("segment", segment);
 		jc.addCommand("compare", compare);
 		jc.addCommand("enumerate", enumerate);
 		jc.addCommand("-h", help);
-		jc.parse(args);
+		try{
+			jc.parse(args);		
 
 		if(jc.getParsedCommand()==null || jc.getParsedCommand().equals("-h")){
 			jc.usage();
 		}
 		else if(jc.getParsedCommand().equals("assemble")){
-			
+
+			validateAssemble(assemble);
+
 			File out_dir = assemble.dir;
 			if(!out_dir.exists())
 				out_dir.mkdirs();
@@ -92,12 +184,12 @@ public class IsoSCM {
 			File log_file = FileUtils.getFile(out_dir, Util.sprintf("%s.assembly.log", assemble.base));
 			// specify the log file for assembly
 			ThreadContext.put("log_file", log_file.getAbsolutePath());
-			
+
 			logger.info("Starting assemble ...");
-			
+
 			File configuration_file = FileUtils.getFile(out_dir, Util.sprintf("%s.assembly_parameters.xml", assemble.base));
 			ConfigurationIO.writeConfiguration(assemble, configuration_file);
-			
+
 			//pre-process
 			{
 
@@ -194,7 +286,7 @@ public class IsoSCM {
 
 				System.out.println("merging gapped segments");
 				BEDWriter merged_segments = new BEDWriter(IO.bufferedPrintstream(merged_segment_bed));
-				File merge_regions = assemble.filled_gap_segments == null? null : new File(assemble.filled_gap_segments);
+				File merge_regions = assemble.filled_gap_segments == null? null : assemble.filled_gap_segments;
 				ClusterExpressedSegments.mergeSegments(segment_bed, merge_regions, merged_segments, assemble.merge_radius);
 				merged_segments.close();
 
@@ -299,7 +391,7 @@ public class IsoSCM {
 				sfr.close();
 
 			}
-			
+
 			logger.info("assemble completed.");	
 		}
 		else if(jc.getParsedCommand().equals("segment")){	
@@ -452,19 +544,21 @@ public class IsoSCM {
 			}
 		}
 		else if(jc.getParsedCommand().equals("enumerate")){
+			validateEnumerate(enumerate);
+
 			AssembleCommand assemblyConfiguration = ConfigurationIO.readAssemblyConfiguration(enumerate.assemblyXml);
-			
+
 			File out_dir = assemble.dir;
-			
+
 			File log_file = FileUtils.getFile(compare.dir, Util.sprintf("%s.enumerate.log", assemble.base));
 			// specify the log file for assembly
 			ThreadContext.put("log_file", log_file.getAbsolutePath());
-			
+
 			logger.info("Starting enumerate ...");
-			
+
 			File configuration_xml = FileUtils.getFile(out_dir, Util.sprintf("%s.enumerate_parameters.xml", assemble.base));
 			ConfigurationIO.writeConfiguration(enumerate, configuration_xml);
-			
+
 			PrintStream gtfFile = IO.bufferedPrintstream(FileUtils.getFile(assemblyConfiguration.dir,Util.sprintf("%s.isoforms.gtf", assemblyConfiguration.base)));
 			PrintStream skipped = IO.bufferedPrintstream(FileUtils.getFile(assemblyConfiguration.dir,Util.sprintf("%s.skipped_loci.txt", assemblyConfiguration.base)));
 			File assembly_gtf = new File(Util.sprintf("%s/%s.gtf",assemblyConfiguration.dir, assemblyConfiguration.base));
@@ -475,29 +569,31 @@ public class IsoSCM {
 			logger.info("enumerate completed.");
 		}
 		else if(jc.getParsedCommand().equals("compare")){
+			validateCompare(compare);
+
 			if(!compare.dir.exists())
 				compare.dir.mkdirs();
-			
+
 			File log_file = FileUtils.getFile(compare.dir, Util.sprintf("%s.compare.log", compare.base));
 			// specify the log file for assembly
 			ThreadContext.put("log_file", log_file.getAbsolutePath());
-			
+
 			logger.info("Starting compare ...");
-			
+
 			File configuration_xml = FileUtils.getFile(compare.dir,Util.sprintf("%s.compare_parameters.xml", compare.base));
 			ConfigurationIO.writeConfiguration(compare, configuration_xml);
-			
+
 			AssembleCommand assemblyConfiguration1 = ConfigurationIO.readAssemblyConfiguration(compare.assemblyXml1);
 			AssembleCommand assemblyConfiguration2 = ConfigurationIO.readAssemblyConfiguration(compare.assemblyXml2);
-			
+
 			Strandedness s1=Strandedness.valueOf(assemblyConfiguration1.strandedness); Strandedness s2=Strandedness.valueOf(assemblyConfiguration2.strandedness);
-			
+
 			File spliced_exon_gtf1 = FileUtils.getFile(assemblyConfiguration1.dir,"tmp",assemblyConfiguration1.base+".exon"+(s1==Strandedness.unstranded?".trimmed":"")+".gtf");
 			File spliced_exon_gtf2 = FileUtils.getFile(assemblyConfiguration1.dir,"tmp",assemblyConfiguration1.base+".exon"+(s2==Strandedness.unstranded?".trimmed":"")+".gtf");
-			
+
 			File table = FileUtils.getFile(compare.dir,Util.sprintf("%s.txt",compare.base));
 			File gtf = FileUtils.getFile(compare.dir,Util.sprintf("%s.gtf",compare.base));
-			
+
 			int maxBins = 20000;
 			int binSize=assemblyConfiguration1.w;
 			int minCP=0;
@@ -507,10 +603,21 @@ public class IsoSCM {
 			int r=assemblyConfiguration1.segment_r;
 			double p=assemblyConfiguration1.segment_p;
 			double min_fold=assemblyConfiguration1.min_fold;
-			
+
 			JointSegmentation.performJointSegmentation(assemblyConfiguration1.base, assemblyConfiguration2.base, spliced_exon_gtf1, spliced_exon_gtf2, assemblyConfiguration1.bam, assemblyConfiguration2.bam, table, gtf,s1,s2, maxBins, binSize, minCP, alpha_0, beta_0, nb_r, r, p, min_fold);
-			
+
 			logger.info("compare comleted.");
+		}
+		}
+		catch(ParameterException e){
+			e.printStackTrace(System.out);
+			String command = jc.getParsedCommand();
+			if(command!=null){
+				jc.usage(command);
+			}
+			else{
+				jc.usage();
+			}
 		}
 	}
 }

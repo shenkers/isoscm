@@ -14,17 +14,17 @@ import com.beust.jcommander.Parameter;
 public class CompareCommand{	
 
 
-	@Parameter(names="-x1", description="XML configuration file for the assembly step from sample 1", converter=FileConverter.class)
+	@Parameter(names="-x1", description="XML configuration file for the assembly step from sample 1", converter=FileConverter.class, required=true)
 	File assemblyXml1;
 
-	@Parameter(names="-x2", description="XML configuration file for the assembly step from sample 2", converter=FileConverter.class)
+	@Parameter(names="-x2", description="XML configuration file for the assembly step from sample 2", converter=FileConverter.class, required=true)
 	File assemblyXml2;
 
 	@Parameter(names="-base", description="output files will be written to [dir]/[base].txt and [dir]/[base].gtf")
 	String base;
 
 	@Parameter(names="-dir", description="The output directory", converter=FileConverter.class)
-	public File dir;
+	File dir = new File("compare").getAbsoluteFile();
 
 	public File getAssemblyXml1() {
 		return assemblyXml1;

@@ -14,10 +14,10 @@ import com.beust.jcommander.converters.IntegerConverter;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 public class EnumerateCommand{	
     
-	@Parameter(names="-x", description="configuration XML file from the assembly step", converter=FileConverter.class)
+	@Parameter(names="-x", description="configuration XML file from the assembly step", converter=FileConverter.class, required=true)
 	File assemblyXml;
 	
-	@Parameter(names="-max_isoforms", description="loci with more than this number of isoforms will be skipped", converter=IntegerConverter.class)
+	@Parameter(names="-max_isoforms", description="loci with more than this number of isoforms will be skipped", converter=IntegerConverter.class, required=true)
 	Integer max_paths;
 	
 	@XmlElement
