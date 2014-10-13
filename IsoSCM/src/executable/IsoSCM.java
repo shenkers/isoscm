@@ -48,11 +48,11 @@ public class IsoSCM {
 			fails_validation = true;
 			msg.append(Util.sprintf("Must specify the data strandedness (parameter '-s'). "));
 		}
-		if(params.bam.isDirectory()){
+		if(params.bam!=null && params.bam.isDirectory()){
 			fails_validation = true;
 			msg.append(Util.sprintf("File '%s' is a directory, specify a BAM file (parameter -bam). ",params.bam));
 		}
-		if(!params.bam.exists()){
+		if(params.bam!=null && !params.bam.exists()){
 			fails_validation = true;
 			msg.append(Util.sprintf("BAM file '%s' does not exist, specify a BAM file (parameter -bam). ",params.bam));
 		}
