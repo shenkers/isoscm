@@ -2,10 +2,20 @@ package processing;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.lang.reflect.Array;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Queue;
+import java.util.Map.Entry;
+import java.util.NavigableSet;
+import java.util.PriorityQueue;
+import java.util.Set;
+import java.util.TreeMap;
 
 import net.sf.samtools.Cigar;
 import net.sf.samtools.CigarElement;
@@ -28,7 +38,9 @@ import tools.StrandedGenomicIntervalTree;
 import tools.Strandedness;
 import util.Util;
 import util.Util.ExtremeObjectTracker;
+import util.Util.Instantiator;
 import util.Util.MapCounter;
+import util.Util.MapFactory;
 import filter.ComposableFilter;
 import filter.ConsumingReadFilter;
 import filter.Counter;
@@ -571,64 +583,64 @@ public class FindSpliceJunctions {
 		}
 	}
 
-//	public static void updateJunctionCounts(SAMRecord sr, StrandedGenomicIntervalTree<Map<String,Object>> j5p, StrandedGenomicIntervalTree<Map<String,Object>> j3p){
-//		Integer lastAlignedPosition = null;
-//		int alignmentPosition = sr.getAlignmentStart();
-//		Cigar cigar = sr.getCigar();
-//
-//		for(int i=0; i<cigar.numCigarElements(); i++){
-//			CigarElement cigarElement = cigar.getCigarElement(i);
-//			if(cigarElement.getOperator().consumesReferenceBases()){
-//				boolean consumesReadBases = cigarElement.getOperator().consumesReadBases();
-//
-//				if(consumesReadBases){
-//					for(int j=0; j<cigarElement.getLength(); j++){
-//						if(lastAlignedPosition!=null){
-//							AnnotatedRegion span = new AnnotatedRegion("", sr.getReferenceName(), lastAlignedPosition, alignmentPosition, '.');
-//							if(alignmentPosition-lastAlignedPosition==1){
-//								for(char strand : Util.list('+','-')){
-//									int p5p = span.get3Prime(strand);
-//									int p3p = span.get5Prime(strand);
-//									for(AnnotatedRegion r : j5p.overlappingRegions(sr.getReferenceName(), p5p, p5p, strand)){
-//										MapCounter<String> mc = (MapCounter<String>) r.getAttribute("counts");
-//										mc.increment("n5p_i");
-//									}
-//									for(AnnotatedRegion r : j3p.overlappingRegions(sr.getReferenceName(), p3p, p3p, strand)){
-//										MapCounter<String> mc = (MapCounter<String>) r.getAttribute("counts");
-//										mc.increment("n3p_i");
-//									}
-//								}
-//								//							System.out.printf("spanned %s:%d-%d\n", sr.getReferenceName(), lastAlignedPosition, alignmentPosition);
-//							}
-//							else if(alignmentPosition-lastAlignedPosition!=1){
-//								//								System.out.printf("not spanned %s:%d-%d\n", sr.getReferenceName(), lastAlignedPosition, alignmentPosition);
-//
-//								for(char strand : Util.list('+','-')){
-//									int p5p = IntervalTools.offsetPosition(span.get5Prime(strand), 1, strand=='-', false);
-//									int p3p = IntervalTools.offsetPosition(span.get3Prime(strand), 1, strand=='-', true);
-//									for(AnnotatedRegion r : j5p.overlappingRegions(sr.getReferenceName(), p5p, p5p, strand)){
-//										MapCounter<String> mc = (MapCounter<String>) r.getAttribute("counts");
-//										mc.increment("n5p_e");
-//									}
-//									for(AnnotatedRegion r : j3p.overlappingRegions(sr.getReferenceName(), p3p, p3p, strand)){
-//										MapCounter<String> mc = (MapCounter<String>) r.getAttribute("counts");
-//										mc.increment("n3p_e");
-//									}
-//								}
-//							}
-//
-//						}
-//
-//						lastAlignedPosition = alignmentPosition;
-//						alignmentPosition++;
-//					}
-//				}
-//				else{
-//					alignmentPosition+=cigarElement.getLength();
-//				}
-//			}			
-//		}
-//	}
+	//	public static void updateJunctionCounts(SAMRecord sr, StrandedGenomicIntervalTree<Map<String,Object>> j5p, StrandedGenomicIntervalTree<Map<String,Object>> j3p){
+	//		Integer lastAlignedPosition = null;
+	//		int alignmentPosition = sr.getAlignmentStart();
+	//		Cigar cigar = sr.getCigar();
+	//
+	//		for(int i=0; i<cigar.numCigarElements(); i++){
+	//			CigarElement cigarElement = cigar.getCigarElement(i);
+	//			if(cigarElement.getOperator().consumesReferenceBases()){
+	//				boolean consumesReadBases = cigarElement.getOperator().consumesReadBases();
+	//
+	//				if(consumesReadBases){
+	//					for(int j=0; j<cigarElement.getLength(); j++){
+	//						if(lastAlignedPosition!=null){
+	//							AnnotatedRegion span = new AnnotatedRegion("", sr.getReferenceName(), lastAlignedPosition, alignmentPosition, '.');
+	//							if(alignmentPosition-lastAlignedPosition==1){
+	//								for(char strand : Util.list('+','-')){
+	//									int p5p = span.get3Prime(strand);
+	//									int p3p = span.get5Prime(strand);
+	//									for(AnnotatedRegion r : j5p.overlappingRegions(sr.getReferenceName(), p5p, p5p, strand)){
+	//										MapCounter<String> mc = (MapCounter<String>) r.getAttribute("counts");
+	//										mc.increment("n5p_i");
+	//									}
+	//									for(AnnotatedRegion r : j3p.overlappingRegions(sr.getReferenceName(), p3p, p3p, strand)){
+	//										MapCounter<String> mc = (MapCounter<String>) r.getAttribute("counts");
+	//										mc.increment("n3p_i");
+	//									}
+	//								}
+	//								//							System.out.printf("spanned %s:%d-%d\n", sr.getReferenceName(), lastAlignedPosition, alignmentPosition);
+	//							}
+	//							else if(alignmentPosition-lastAlignedPosition!=1){
+	//								//								System.out.printf("not spanned %s:%d-%d\n", sr.getReferenceName(), lastAlignedPosition, alignmentPosition);
+	//
+	//								for(char strand : Util.list('+','-')){
+	//									int p5p = IntervalTools.offsetPosition(span.get5Prime(strand), 1, strand=='-', false);
+	//									int p3p = IntervalTools.offsetPosition(span.get3Prime(strand), 1, strand=='-', true);
+	//									for(AnnotatedRegion r : j5p.overlappingRegions(sr.getReferenceName(), p5p, p5p, strand)){
+	//										MapCounter<String> mc = (MapCounter<String>) r.getAttribute("counts");
+	//										mc.increment("n5p_e");
+	//									}
+	//									for(AnnotatedRegion r : j3p.overlappingRegions(sr.getReferenceName(), p3p, p3p, strand)){
+	//										MapCounter<String> mc = (MapCounter<String>) r.getAttribute("counts");
+	//										mc.increment("n3p_e");
+	//									}
+	//								}
+	//							}
+	//
+	//						}
+	//
+	//						lastAlignedPosition = alignmentPosition;
+	//						alignmentPosition++;
+	//					}
+	//				}
+	//				else{
+	//					alignmentPosition+=cigarElement.getLength();
+	//				}
+	//			}			
+	//		}
+	//	}
 
 	public static void updateJunctionCounts(SAMRecord sr, StrandedGenomicIntervalTree<Map<String,Object>> j5p, StrandedGenomicIntervalTree<Map<String,Object>> j3p, Strandedness strandedness){
 		Integer lastAlignedPosition = null;
@@ -726,46 +738,113 @@ public class FindSpliceJunctions {
 
 	}
 
-//	public static void countJunctionSupportingReads(SAMFileReader sfr, File splice_junction_bed, GTFWriter gw) throws FileNotFoundException{	
-//		StrandedGenomicIntervalTree<Map<String,Object>> jncts = IntervalTools.buildRegionsTree(new BEDIterator(splice_junction_bed), true, false);
-//		StrandedGenomicIntervalTree<Map<String,Object>> j5p = IntervalTools.buildAttributedTerminiTree(jncts, true, true);
-//		StrandedGenomicIntervalTree<Map<String,Object>> j3p = IntervalTools.buildAttributedTerminiTree(jncts, false, true);
-//
-//		for(AnnotatedRegion r : j5p){
-//			r.addAttribute("counts", new MapCounter<String>());
-//		}
-//
-//		for(AnnotatedRegion r : j3p){
-//			r.addAttribute("counts", new MapCounter<String>());
-//		}
-//
-//		SAMRecordIterator sri = sfr.iterator();
-//		while(sri.hasNext()){
-//			SAMRecord sr = sri.next();
-//			updateJunctionCounts(sr,j5p,j3p);
-//		}
-//		sri.close();
-//
-//		for(AnnotatedRegion r : j5p){
-//			Map<String,Object> attributes = new HashMap<String, Object>();
-//			for(String key : Util.list("n5p_e","n5p_i")){
-//				attributes.put(key, ((MapCounter<String>) r.getAttribute("counts")).get(key));
-//			}
-//			gw.write("j5p",r.chr, r.start, r.end, r.strand,AnnotatedRegion.GTFAttributeString(attributes));
-//			//			System.out.printf("%s\t%s\n", r,((MapCounter<String>) r.getAttribute("counts")).getMap());
-//		}
-//		for(AnnotatedRegion r : j3p){
-//			Map<String,Object> attributes = new HashMap<String, Object>();
-//			for(String key : Util.list("n3p_e","n3p_i")){
-//				attributes.put(key, ((MapCounter<String>) r.getAttribute("counts")).get(key));
-//			}
-//			gw.write("j3p",r.chr, r.start, r.end, r.strand,AnnotatedRegion.GTFAttributeString(attributes));
-//			//			System.out.printf("%s\t%s\n", r,((MapCounter<String>) r.getAttribute("counts")).getMap());
-//		}
-//
-//		gw.close();
-//	}
-	
+	public static void updateJunctionCounts2(SAMRecord sr, MapFactory<Character, MapCounter<Integer>> strand_count_5p_span, MapFactory<Character, MapCounter<Integer>> strand_count_5p_splice, MapFactory<Character, MapCounter<Integer>> strand_count_3p_span, MapFactory<Character, MapCounter<Integer>> strand_count_3p_splice, Strandedness strandedness){
+		Integer lastAlignedPosition = null;
+		int alignmentPosition = sr.getAlignmentStart();
+		Cigar cigar = sr.getCigar();
+
+		char[] strands = null;
+		// will be undefined if read is unspliced
+		Character splice_strand = sr.getCharacterAttribute("XS");
+		// will not be properly defined if the read is unspliced
+		Boolean isNegativeStrand = splice_strand == null ? null : '-'==splice_strand;
+		
+		switch (strandedness) {
+		case unstranded:
+			strands = new char[]{'+','-'};
+			break;
+
+		default:
+			strands = new char[]{BAMTools.strand(sr, strandedness)};
+			break;
+		}
+		
+		CigarElement prevCigarElement = null;
+		for(int i=0; i<cigar.numCigarElements(); i++){
+			CigarElement cigarElement = cigar.getCigarElement(i);
+			
+			if(cigarElement.getOperator().consumesReferenceBases()){
+				boolean consumesReadBases = cigarElement.getOperator().consumesReadBases();
+
+				if(consumesReadBases){
+					for(int j=0; j<cigarElement.getLength(); j++){
+						if(lastAlignedPosition!=null){
+
+							if(alignmentPosition-lastAlignedPosition==1){
+
+								for(char strand : strands){
+									int p3p = IntervalTools.get3prime(lastAlignedPosition, alignmentPosition, strand=='-');
+									strand_count_5p_span.get(strand).increment(p3p);
+									int p5p = IntervalTools.get5prime(lastAlignedPosition, alignmentPosition, strand=='-');
+									strand_count_3p_span.get(strand).increment(p5p);
+								}
+								//							System.out.printf("spanned %s:%d-%d\n", sr.getReferenceName(), lastAlignedPosition, alignmentPosition);
+							}
+							else if(alignmentPosition-lastAlignedPosition!=1 && prevCigarElement.getOperator().equals(CigarOperator.SKIPPED_REGION)){
+								//								System.out.printf("not spanned %s:%d-%d\n", sr.getReferenceName(), lastAlignedPosition, alignmentPosition);
+
+								
+									int p5p = IntervalTools.offsetPosition(IntervalTools.get5prime(lastAlignedPosition, alignmentPosition, isNegativeStrand), 1, isNegativeStrand, false);
+									strand_count_5p_splice.get(splice_strand).increment(p5p);
+									int p3p = IntervalTools.offsetPosition(IntervalTools.get3prime(lastAlignedPosition, alignmentPosition, isNegativeStrand), 1, isNegativeStrand, true);
+									strand_count_3p_splice.get(splice_strand).increment(p3p);
+								
+							}
+
+						}
+
+						lastAlignedPosition = alignmentPosition;
+						alignmentPosition++;
+					}
+				}
+				else{
+					alignmentPosition+=cigarElement.getLength();
+				}
+			}			
+			prevCigarElement = cigarElement;
+		}
+	}
+
+	//	public static void countJunctionSupportingReads(SAMFileReader sfr, File splice_junction_bed, GTFWriter gw) throws FileNotFoundException{	
+	//		StrandedGenomicIntervalTree<Map<String,Object>> jncts = IntervalTools.buildRegionsTree(new BEDIterator(splice_junction_bed), true, false);
+	//		StrandedGenomicIntervalTree<Map<String,Object>> j5p = IntervalTools.buildAttributedTerminiTree(jncts, true, true);
+	//		StrandedGenomicIntervalTree<Map<String,Object>> j3p = IntervalTools.buildAttributedTerminiTree(jncts, false, true);
+	//
+	//		for(AnnotatedRegion r : j5p){
+	//			r.addAttribute("counts", new MapCounter<String>());
+	//		}
+	//
+	//		for(AnnotatedRegion r : j3p){
+	//			r.addAttribute("counts", new MapCounter<String>());
+	//		}
+	//
+	//		SAMRecordIterator sri = sfr.iterator();
+	//		while(sri.hasNext()){
+	//			SAMRecord sr = sri.next();
+	//			updateJunctionCounts(sr,j5p,j3p);
+	//		}
+	//		sri.close();
+	//
+	//		for(AnnotatedRegion r : j5p){
+	//			Map<String,Object> attributes = new HashMap<String, Object>();
+	//			for(String key : Util.list("n5p_e","n5p_i")){
+	//				attributes.put(key, ((MapCounter<String>) r.getAttribute("counts")).get(key));
+	//			}
+	//			gw.write("j5p",r.chr, r.start, r.end, r.strand,AnnotatedRegion.GTFAttributeString(attributes));
+	//			//			System.out.printf("%s\t%s\n", r,((MapCounter<String>) r.getAttribute("counts")).getMap());
+	//		}
+	//		for(AnnotatedRegion r : j3p){
+	//			Map<String,Object> attributes = new HashMap<String, Object>();
+	//			for(String key : Util.list("n3p_e","n3p_i")){
+	//				attributes.put(key, ((MapCounter<String>) r.getAttribute("counts")).get(key));
+	//			}
+	//			gw.write("j3p",r.chr, r.start, r.end, r.strand,AnnotatedRegion.GTFAttributeString(attributes));
+	//			//			System.out.printf("%s\t%s\n", r,((MapCounter<String>) r.getAttribute("counts")).getMap());
+	//		}
+	//
+	//		gw.close();
+	//	}
+
 	public static void countJunctionSupportingReads(SAMFileReader sfr, Strandedness strandedness, File splice_junction_bed, GTFWriter gw) throws FileNotFoundException{	
 		StrandedGenomicIntervalTree<Map<String,Object>> jncts = IntervalTools.buildRegionsTree(new BEDIterator(splice_junction_bed), true, false);
 		StrandedGenomicIntervalTree<Map<String,Object>> j5p = IntervalTools.buildAttributedTerminiTree(jncts, true, true);
@@ -804,6 +883,138 @@ public class FindSpliceJunctions {
 		}
 
 		gw.close();
+	}
+
+	public static void countJunctionSupportingReads2(SAMFileReader sfr, Strandedness strandedness, GTFWriter gw) throws FileNotFoundException{	
+		//		TreeMap<Integer, Integer> pos_tree_5p_splice =new TreeMap<Integer, Integer>();
+		//		TreeMap<Integer, Integer> neg_tree_5p_splice =new TreeMap<Integer, Integer>();
+		//		TreeMap<Integer, Integer> pos_tree_5p_span = new TreeMap<Integer, Integer>();
+		//		TreeMap<Integer, Integer> neg_tree_5p_span = new TreeMap<Integer, Integer>();
+		//		MapCounter<Integer> pos_count_5p_splice = new MapCounter<Integer>(pos_tree_5p_splice);
+		//		MapCounter<Integer> neg_count_5p_splice = new MapCounter<Integer>(neg_tree_5p_splice);
+		//		MapCounter<Integer> pos_count_5p_span = new MapCounter<Integer>(pos_tree_5p_span);
+		//		MapCounter<Integer> neg_count_5p_span = new MapCounter<Integer>(neg_tree_5p_span);
+		//		Map<Character,MapCounter<Integer>> strand_count_5p_splice = new HashMap<Character, MapCounter<Integer>>();
+		//		Map<Character,MapCounter<Integer>> strand_count_5p_span = new HashMap<Character, MapCounter<Integer>>();
+
+		Instantiator<MapCounter<Integer>> i = new Instantiator<MapCounter<Integer>>() {
+			public MapCounter<Integer> instantiate(Object... objects) {
+				return new MapCounter<Integer>(new TreeMap<Integer,Integer>());
+			}
+		};
+
+		MapFactory<Character, MapCounter<Integer>> strand_count_5p_splice = new MapFactory(i);
+		MapFactory<Character, MapCounter<Integer>> strand_count_5p_span = new MapFactory(i);
+		MapFactory<Character, MapCounter<Integer>> strand_count_3p_splice = new MapFactory(i);
+		MapFactory<Character, MapCounter<Integer>> strand_count_3p_span = new MapFactory(i);
+
+		SAMRecordIterator sri = sfr.iterator();
+		String prev_chr = null;
+		int j=0;
+		while(sri.hasNext()){
+			j++;
+			
+			SAMRecord sr = sri.next();
+			String chr = sr.getReferenceName();
+			int alignment_start = sr.getAlignmentStart();
+			
+			if(j%100000==0)
+				System.out.println(chr);
+			
+			if(prev_chr!=null && !chr.equals(prev_chr)){
+				writeAll(strand_count_5p_splice,strand_count_5p_span, prev_chr, true);
+				writeAll(strand_count_5p_splice,strand_count_5p_span, prev_chr, false);
+				strand_count_5p_splice.getMap().clear();
+				strand_count_5p_span.getMap().clear();
+				strand_count_3p_splice.getMap().clear();
+				strand_count_3p_span.getMap().clear();
+			}
+			
+			//			updateJunctionCounts(sr, j5p, j3p, strandedness);
+			updateJunctionCounts2(sr, strand_count_5p_span, strand_count_5p_splice, strand_count_3p_span, strand_count_3p_splice, strandedness);
+			//			System.out.println(count_5p_splice);
+
+			if(j%100==0){
+			writeToAlignmentStart(strand_count_5p_splice, strand_count_5p_span, chr, alignment_start, true);
+			writeToAlignmentStart(strand_count_3p_splice, strand_count_3p_span, chr, alignment_start, false);
+
+			removeToAlignmentStart(strand_count_5p_splice,alignment_start);
+			removeToAlignmentStart(strand_count_5p_span,alignment_start);
+			removeToAlignmentStart(strand_count_3p_splice,alignment_start);
+			removeToAlignmentStart(strand_count_3p_span,alignment_start);
+			}
+		}
+		sri.close();
+
+		writeAll(strand_count_5p_splice,strand_count_5p_span, prev_chr, true);
+		writeAll(strand_count_3p_splice,strand_count_3p_span, prev_chr, false);
+
+		//		for(AnnotatedRegion r : j5p){
+		//			Map<String,Object> attributes = new HashMap<String, Object>();
+		//			for(String key : Util.list("n5p_e","n5p_i")){
+		//				attributes.put(key, ((MapCounter<String>) r.getAttribute("counts")).get(key));
+		//			}
+		//			gw.write("j5p",r.chr, r.start, r.end, r.strand,AnnotatedRegion.GTFAttributeString(attributes));
+		//			//			System.out.printf("%s\t%s\n", r,((MapCounter<String>) r.getAttribute("counts")).getMap());
+		//		}
+		//		for(AnnotatedRegion r : j3p){
+		//			Map<String,Object> attributes = new HashMap<String, Object>();
+		//			for(String key : Util.list("n3p_e","n3p_i")){
+		//				attributes.put(key, ((MapCounter<String>) r.getAttribute("counts")).get(key));
+		//			}
+		//			gw.write("j3p",r.chr, r.start, r.end, r.strand,AnnotatedRegion.GTFAttributeString(attributes));
+		//			//			System.out.printf("%s\t%s\n", r,((MapCounter<String>) r.getAttribute("counts")).getMap());
+		//		}
+		//
+		//		gw.close();
+	}
+
+	public static void writeToAlignmentStart(MapFactory<Character, MapCounter<Integer>> strand_count_3p_splice, MapFactory<Character, MapCounter<Integer>> strand_count_3p_span, String chr, int alignment_start, boolean is5p){
+		for(char strand : new char[]{'+','-'}){
+			SortedMultiIterator<Integer> smi = new SortedMultiIterator<Integer>(Integer.class, ((TreeMap<Integer,Integer>) strand_count_3p_splice.get(strand).getMap()).navigableKeySet().iterator(), ((TreeMap<Integer,Integer>) strand_count_3p_span.get(strand).getMap()).navigableKeySet().iterator());
+			while(smi.hasNext()){
+				Integer[] keys = smi.next();
+				Integer key = keys[0]==null?keys[1]:keys[0];
+				if(key < alignment_start){
+					if(keys[0]!=null){
+//						System.out.printf("writing pos %s:%d:%c %s %d %s %d\n", chr, key, strand, is5p?"5p_e":"3p_e", strand_count_3p_splice.get(strand).get(key), is5p?"5p_i":"3p_i", strand_count_3p_span.get(strand).get(key));
+					}
+				}
+				else{
+					break;
+				}
+			}
+		}
+	}
+
+	public static void removeToAlignmentStart(MapFactory<Character, MapCounter<Integer>> strand_count_5p_splice, int start){
+		for(char strand : new char[]{'+','-'}){
+			Iterator<Integer> ascendingKeySet = ((TreeMap<Integer,Integer>) strand_count_5p_splice.get(strand).getMap()).navigableKeySet().iterator();
+			while(ascendingKeySet.hasNext()){
+				Integer key = ascendingKeySet.next();
+				//					System.out.printf("span key %d alignment start %d\n", key, sr.getAlignmentStart());
+				if(key < start){
+					//						System.out.printf("removing 5p_span %d %d\n", key, tree_5p_span.get(key));
+					ascendingKeySet.remove();
+				}
+				else{
+					break;
+				}
+			}
+		}
+	}
+
+	public static void writeAll(MapFactory<Character, MapCounter<Integer>> strand_count_5p_splice, MapFactory<Character, MapCounter<Integer>> strand_count_5p_span, String chr, boolean is5p){
+		for(char strand : new char[]{'+','-'}){
+			SortedMultiIterator<Integer> smi = new SortedMultiIterator<Integer>(Integer.class, ((TreeMap<Integer,Integer>) strand_count_5p_splice.get(strand).getMap()).navigableKeySet().iterator(), ((TreeMap<Integer,Integer>) strand_count_5p_span.get(strand).getMap()).navigableKeySet().iterator());
+			while(smi.hasNext()){
+				Integer[] keys = smi.next();
+				Integer key = keys[0]==null?keys[1]:keys[0];
+				if(keys[0]!=null){
+//					System.out.printf("writing pos %s:%d:%c %s %d %s %d\n", chr, key, strand, is5p?"5p_e":"3p_e", strand_count_5p_splice.get(strand).get(key), is5p?"5p_i":"3p_i", strand_count_5p_span.get(strand).get(key));
+				}
+			}
+		}
 	}
 
 	/**
@@ -1090,11 +1301,173 @@ public class FindSpliceJunctions {
 		return splice_junctions;
 	}
 
+	public static <T extends Comparable<T>> List<T> merge(PeekingIterator<T>...lists){
+		int l = lists.length;
+
+		class IndexedIterator<T>{
+			int i;
+			PeekingIterator<T> pi;
+
+			public IndexedIterator(int i, PeekingIterator<T> pi) {
+				this.i = i;
+				this.pi = pi;
+			}
+		}
+
+		Comparator<IndexedIterator<T>> C = new Comparator<IndexedIterator<T>>() {
+			public int compare(IndexedIterator<T> o1, IndexedIterator<T> o2) {
+				return o1.pi.peek().compareTo(o2.pi.peek());
+			}
+		};
+
+		PriorityQueue<IndexedIterator<T>> pq = new PriorityQueue<IndexedIterator<T>>(lists.length, C);
+		for(int i=0; i < l; i++){
+			PeekingIterator<T> q = lists[i];
+			if(q.hasNext){
+				pq.add(new IndexedIterator(i, q));
+			}
+		}
+
+		while(!pq.isEmpty()){
+			T[] array = (T[]) new Comparable[l];
+			T next = null;
+			do{
+				IndexedIterator<T> q = pq.poll();
+				next = q.pi.next();
+				array[q.i] = next;
+				if(q.pi.hasNext()){
+					System.out.println("adding "+q.i+" back to queue after removing element "+next);
+					System.out.println(q.pi.peek());
+					System.out.println(q.pi.hasNext());
+					pq.add(q);
+				}
+			} while(!pq.isEmpty() && pq.peek().pi.peek().compareTo(next)==0);
+			System.out.println(Util.list(array));
+		}
+
+		return null;
+	}
+
+	static class PeekingIterator<T> implements Iterator<T>{
+
+		Iterator<T> peekable;
+		T peek;
+		boolean hasNext;
+		boolean hasPeek;
+
+		public PeekingIterator(Iterator<T> peekable) {
+			this.peekable = peekable;
+			hasNext = peekable.hasNext();
+			if(hasNext){
+				peek = peekable.next();
+			}
+		}
+
+		public boolean hasNext() {
+			return hasNext;
+		}
+
+		public T next() {
+			T next = peek;
+			if(peekable.hasNext()){
+				peek = peekable.next();
+			}
+			else{
+				hasNext=false;
+				peek=null;
+			}
+			return next;
+		}
+
+		public void remove() {
+			throw new RuntimeException(this.getClass().getName()+" does not support remove() operations.");
+		}
+
+		public T peek() {
+			if(!hasNext)
+				throw new NoSuchElementException();
+			return peek;
+		}
+
+	}
+
+	static class SortedMultiIterator<T extends Comparable<T>> implements Iterator<T[]>{
+		int l;
+		PriorityQueue<IndexedIterator<T>> pq;
+		Class<T> type;
+
+		class IndexedIterator<T>{
+			int i;
+			PeekingIterator<T> pi;
+
+			public IndexedIterator(int i, PeekingIterator<T> pi) {
+				this.i = i;
+				this.pi = pi;
+			}
+		}
+
+		public SortedMultiIterator(Class<T> type, Iterator<T>...ilists) {
+			this.type=type;
+			l = ilists.length;
+
+			PeekingIterator<T>[] lists = new PeekingIterator[ilists.length];
+			for (int i = 0; i < lists.length; i++) {
+				lists[i] = new PeekingIterator<T>(ilists[i]);
+			}
+
+			Comparator<IndexedIterator<T>> C = new Comparator<IndexedIterator<T>>() {
+				public int compare(IndexedIterator<T> o1, IndexedIterator<T> o2) {
+					return o1.pi.peek().compareTo(o2.pi.peek());
+				}
+			};
+
+			pq = new PriorityQueue<IndexedIterator<T>>(lists.length, C);
+			for(int i=0; i < l; i++){
+				PeekingIterator<T> q = lists[i];
+				if(q.hasNext){
+					pq.add(new IndexedIterator(i, q));
+				}
+			}
+
+		}
+
+		public boolean hasNext() {
+			return !pq.isEmpty();
+		}
+
+		public T[] next() {
+
+			T[] array = (T[]) Array.newInstance(type, l);
+			T next = null;
+			do{
+				IndexedIterator<T> q = pq.poll();
+				next = q.pi.next();
+				array[q.i] = next;
+				if(q.pi.hasNext()){
+					//				System.out.println("adding "+q.i+" back to queue after removing element "+next);
+					//				System.out.println(q.pi.peek());
+					//				System.out.println(q.pi.hasNext());
+					pq.add(q);
+				}
+			} while(!pq.isEmpty() && pq.peek().pi.peek().compareTo(next)==0);
+
+			return array;
+		}
+
+		public void remove() {
+			throw new RuntimeException(this.getClass().getName()+" does not support remove() operation");
+		}
+
+	}
+
 	public static void main(String[] args) throws FileNotFoundException {
+
+
 		if(true){
-			SAMFileReader sfr = new SAMFileReader(new File("/mnt/LaiLab/sol/GSE51572/test/g.bam"));
-//			countJunctionSupportingReads(sfr, new File("/mnt/LaiLab/sol/GSE51572/test/isoscm/tmp/g.sj.bed"), new GTFWriter("/mnt/LaiLab/sol/GSE51572/test/g1.counts.gtf"));
-//			countJunctionSupportingReads2(sfr, Strandedness.reverse_forward, new File("/mnt/LaiLab/sol/GSE51572/test/isoscm/tmp/g.sj.bed"), new GTFWriter("/mnt/LaiLab/sol/GSE51572/test/g2.counts2.gtf"));
+			SAMFileReader sfr = new SAMFileReader(new File("/home/sol/lailab/sol/SRP017778/merged/SRR645855.bam"));
+			System.out.println(BAMTools.totalAlignedReads(sfr));
+			//			countJunctionSupportingReads(sfr, new File("/mnt/LaiLab/sol/GSE51572/test/isoscm/tmp/g.sj.bed"), new GTFWriter("/mnt/LaiLab/sol/GSE51572/test/g1.counts.gtf"));
+			countJunctionSupportingReads2(sfr, Strandedness.unstranded, new GTFWriter("/dev/stdout"));
 		}
 		if(false){
 			SAMFileReader sfr = new SAMFileReader(new File("/home/sol/lailab/sol/GSE41637/mapped/indexed/SRR594393.bam"));

@@ -845,6 +845,20 @@ public class IntervalTools {
 		else
 			return new AnnotatedRegion("", chr, end5p, end3p, isNegativeStrand ? '-' : '+');
 	}
+	
+	public static int get3prime(int start, int end, boolean isNegativeStrand) {
+		if(isNegativeStrand)
+			return start;
+		else
+			return end;
+	}
+	
+	public static int get5prime(int start, int end, boolean isNegativeStrand) {
+		if(isNegativeStrand)
+			return end;
+		else
+			return start;
+	}
 
 	public static int distance(int end5p, int end3p, boolean isNegativeStrand) {
 		if(isNegativeStrand)

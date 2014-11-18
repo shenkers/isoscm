@@ -16,7 +16,7 @@ import com.beust.jcommander.converters.IntegerConverter;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 public class AssembleCommand{	
 
-	@Parameter(names="-bam", description="bam file to be segmented", converter=FileConverter.class)
+	@Parameter(names="-bam", description="bam file to be assembled", converter=FileConverter.class)
 	File bam;
 
 	@Parameter(names="-t", description="the threshold above which a segment is considered expressed", converter=IntegerConverter.class)
@@ -36,6 +36,10 @@ public class AssembleCommand{
 
 	@Parameter(names="-w", description="the width of window to be used by the SCM", converter=IntegerConverter.class)
 	int w = 20;
+	
+	@Parameter(names="-c", description="bin width for evaluating the confidence of a change point", converter=IntegerConverter.class)
+	int c = 2;
+
 
 	@Parameter(names="-segment_r", description="controls how long the fragments are", converter=IntegerConverter.class)
 	int segment_r = 10;
@@ -97,6 +101,10 @@ public class AssembleCommand{
 
 	public int getW() {
 		return w;
+	}
+	
+	public int getC() {
+		return c;
 	}
 
 	public double getSegment_p() {
@@ -173,6 +181,11 @@ public class AssembleCommand{
 	@XmlElement
 	public void setW(int w) {
 		this.w = w;
+	}
+	
+	@XmlElement
+	public void setC(int c) {
+		this.c = c;
 	}
 
 	@XmlElement

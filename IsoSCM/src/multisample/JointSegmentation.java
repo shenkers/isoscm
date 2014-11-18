@@ -152,7 +152,7 @@ public class JointSegmentation {
 		return maxCommonExon;
 	}
 
-	public static void performJointSegmentation(String id1, String id2, File spliced_exons1, File spliced_exons2, File bam1, File bam2, File table, File gtf, Strandedness strandedness1, Strandedness strandedness2, int maxBins, int binSize, int minCP, double alpha_0, double beta_0, int nb_r, int r, double p, double min_fold) throws FileNotFoundException {
+	public static void performJointSegmentation(String id1, String id2, File spliced_exons1, File spliced_exons2, File bam1, File bam2, File table, File gtf, Strandedness strandedness1, Strandedness strandedness2, int maxBins, int binSize, int minCP, double alpha_0, double beta_0, int nb_r, int r, double p, double min_fold, int confidence_interval) throws FileNotFoundException {
 
 		StrandedGenomicIntervalTree<Map<String,Object>> exons1 = IntervalTools.buildRegionsTree(new TranscriptIterator(spliced_exons1), true, true, true);
 		StrandedGenomicIntervalTree<Map<String,Object>> exons2 = IntervalTools.buildRegionsTree(new TranscriptIterator(spliced_exons2), true, true, true);
@@ -176,7 +176,7 @@ public class JointSegmentation {
 
 		GTFWriter gw = new GTFWriter(IO.bufferedPrintstream(gtf));
 		PrintStream tabular = IO.bufferedPrintstream(table);
-		tabular.printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", "samples","locus_id","changepoint","upstream_segment","downstream_segment","locus","strand","upstream_cov","downstream_cov","site_usage","differential_usage");
+		tabular.printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", "samples","locus_id","changepoint","confidence","log_odds","upstream_segment","downstream_segment","locus","strand","upstream_cov","downstream_cov","site_usage","differential_usage");
 		int changepoint_id=0;
 		for(AnnotatedRegion region : t5p){
 			
@@ -190,7 +190,7 @@ public class JointSegmentation {
 		
 			boolean constrained_decreasing = !u.isNegativeStrand();
 			
-			List<ChangePoint> changepoints = IdentifyChangePoints.identifyConstrainedNegativeBinomialPoints(ids,sfrs,strandednesses, u.chr, u.start, u.end, maxBins, binSize, minCP, u.isNegativeStrand(), alpha_0, beta_0, nb_r, r, p, constrained_decreasing, min_fold);
+			List<ChangePoint> changepoints = IdentifyChangePoints.identifyConstrainedNegativeBinomialPoints(ids,sfrs,strandednesses, u.chr, u.start, u.end, maxBins, binSize, minCP, u.isNegativeStrand(), alpha_0, beta_0, nb_r, r, p, constrained_decreasing, min_fold, confidence_interval);
 
 			// write the union exon
 			for(ChangePoint cp : changepoints){
@@ -201,6 +201,8 @@ public class JointSegmentation {
 				changepoint.addAttribute("after_mle", StringUtils.join(Util.list(changepoint.getAttribute("after_mle")),","));
 				changepoint.addAttribute("cov_upstream", StringUtils.join(Util.list(cp.cov_upstream),","));
 				changepoint.addAttribute("cov_downstream", StringUtils.join(Util.list(cp.cov_downstream),","));
+				changepoint.addAttribute("confidence", Util.sprintf("%.3e",cp.confidence));
+				changepoint.addAttribute("log_odds", Util.sprintf("%.3e",cp.log_odds));
 				changepoint.addAttribute("id", locus_ID);
 				gw.write("changepoint", u.chr, changepoint.start, changepoint.end, u.strand, AnnotatedRegion.GTFAttributeString(changepoint.attributes));
 
@@ -211,7 +213,7 @@ public class JointSegmentation {
 				}
 
 				// write all change points, we'll filter out later when we decide on parameters...
-				tabular.printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", StringUtils.join(ids,","),locus_ID,changepoint,cp.upstream_region,cp.downstream_region,u,cp.pos.strand,StringUtils.join(Util.list(cp.cov_upstream),","),StringUtils.join(Util.list(cp.cov_downstream),","),StringUtils.join(Util.list(usage),","),usage[0]-usage[1]);
+				tabular.printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", StringUtils.join(ids,","),locus_ID,changepoint,Util.sprintf("%.3e",cp.confidence), Util.sprintf("%.3e",cp.log_odds),cp.upstream_region,cp.downstream_region,u,cp.pos.strand,StringUtils.join(Util.list(cp.cov_upstream),","),StringUtils.join(Util.list(cp.cov_downstream),","),StringUtils.join(Util.list(usage),","),usage[0]-usage[1]);
 
 			}
 
