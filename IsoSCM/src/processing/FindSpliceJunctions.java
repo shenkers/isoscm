@@ -845,47 +845,9 @@ public class FindSpliceJunctions {
 	//		gw.close();
 	//	}
 
-	public static void countJunctionSupportingReads(SAMFileReader sfr, Strandedness strandedness, File splice_junction_bed, GTFWriter gw) throws FileNotFoundException{	
-		StrandedGenomicIntervalTree<Map<String,Object>> jncts = IntervalTools.buildRegionsTree(new BEDIterator(splice_junction_bed), true, false);
-		StrandedGenomicIntervalTree<Map<String,Object>> j5p = IntervalTools.buildAttributedTerminiTree(jncts, true, true);
-		StrandedGenomicIntervalTree<Map<String,Object>> j3p = IntervalTools.buildAttributedTerminiTree(jncts, false, true);
+	
 
-		for(AnnotatedRegion r : j5p){
-			r.addAttribute("counts", new MapCounter<String>());
-		}
-
-		for(AnnotatedRegion r : j3p){
-			r.addAttribute("counts", new MapCounter<String>());
-		}
-
-		SAMRecordIterator sri = sfr.iterator();
-		while(sri.hasNext()){
-			SAMRecord sr = sri.next();
-			updateJunctionCounts(sr, j5p, j3p, strandedness);
-		}
-		sri.close();
-
-		for(AnnotatedRegion r : j5p){
-			Map<String,Object> attributes = new HashMap<String, Object>();
-			for(String key : Util.list("n5p_e","n5p_i")){
-				attributes.put(key, ((MapCounter<String>) r.getAttribute("counts")).get(key));
-			}
-			gw.write("j5p",r.chr, r.start, r.end, r.strand,AnnotatedRegion.GTFAttributeString(attributes));
-			//			System.out.printf("%s\t%s\n", r,((MapCounter<String>) r.getAttribute("counts")).getMap());
-		}
-		for(AnnotatedRegion r : j3p){
-			Map<String,Object> attributes = new HashMap<String, Object>();
-			for(String key : Util.list("n3p_e","n3p_i")){
-				attributes.put(key, ((MapCounter<String>) r.getAttribute("counts")).get(key));
-			}
-			gw.write("j3p",r.chr, r.start, r.end, r.strand,AnnotatedRegion.GTFAttributeString(attributes));
-			//			System.out.printf("%s\t%s\n", r,((MapCounter<String>) r.getAttribute("counts")).getMap());
-		}
-
-		gw.close();
-	}
-
-	public static void countJunctionSupportingReads2(SAMFileReader sfr, Strandedness strandedness, GTFWriter gw) throws FileNotFoundException{	
+	public static void countJunctionSupportingReads(SAMFileReader sfr, Strandedness strandedness, GTFWriter gw) throws FileNotFoundException{	
 		//		TreeMap<Integer, Integer> pos_tree_5p_splice =new TreeMap<Integer, Integer>();
 		//		TreeMap<Integer, Integer> neg_tree_5p_splice =new TreeMap<Integer, Integer>();
 		//		TreeMap<Integer, Integer> pos_tree_5p_span = new TreeMap<Integer, Integer>();
@@ -910,20 +872,16 @@ public class FindSpliceJunctions {
 
 		SAMRecordIterator sri = sfr.iterator();
 		String prev_chr = null;
-		int j=0;
+		
 		while(sri.hasNext()){
-			j++;
 			
 			SAMRecord sr = sri.next();
 			String chr = sr.getReferenceName();
 			int alignment_start = sr.getAlignmentStart();
 			
-			if(j%100000==0)
-				System.out.println(chr);
-			
 			if(prev_chr!=null && !chr.equals(prev_chr)){
-				writeAll(strand_count_5p_splice,strand_count_5p_span, prev_chr, true);
-				writeAll(strand_count_5p_splice,strand_count_5p_span, prev_chr, false);
+				writeAll(strand_count_5p_splice,strand_count_5p_span, prev_chr, true,gw);
+				writeAll(strand_count_5p_splice,strand_count_5p_span, prev_chr, false,gw);
 				strand_count_5p_splice.getMap().clear();
 				strand_count_5p_span.getMap().clear();
 				strand_count_3p_splice.getMap().clear();
@@ -934,20 +892,19 @@ public class FindSpliceJunctions {
 			updateJunctionCounts2(sr, strand_count_5p_span, strand_count_5p_splice, strand_count_3p_span, strand_count_3p_splice, strandedness);
 			//			System.out.println(count_5p_splice);
 
-			if(j%100==0){
-			writeToAlignmentStart(strand_count_5p_splice, strand_count_5p_span, chr, alignment_start, true);
-			writeToAlignmentStart(strand_count_3p_splice, strand_count_3p_span, chr, alignment_start, false);
+			writeToAlignmentStart(strand_count_5p_splice, strand_count_5p_span, chr, alignment_start, true,gw);
+			writeToAlignmentStart(strand_count_3p_splice, strand_count_3p_span, chr, alignment_start, false,gw);
 
 			removeToAlignmentStart(strand_count_5p_splice,alignment_start);
 			removeToAlignmentStart(strand_count_5p_span,alignment_start);
 			removeToAlignmentStart(strand_count_3p_splice,alignment_start);
 			removeToAlignmentStart(strand_count_3p_span,alignment_start);
-			}
+			
 		}
 		sri.close();
 
-		writeAll(strand_count_5p_splice,strand_count_5p_span, prev_chr, true);
-		writeAll(strand_count_3p_splice,strand_count_3p_span, prev_chr, false);
+		writeAll(strand_count_5p_splice,strand_count_5p_span, prev_chr, true,gw);
+		writeAll(strand_count_3p_splice,strand_count_3p_span, prev_chr, false,gw);
 
 		//		for(AnnotatedRegion r : j5p){
 		//			Map<String,Object> attributes = new HashMap<String, Object>();
@@ -969,15 +926,26 @@ public class FindSpliceJunctions {
 		//		gw.close();
 	}
 
-	public static void writeToAlignmentStart(MapFactory<Character, MapCounter<Integer>> strand_count_3p_splice, MapFactory<Character, MapCounter<Integer>> strand_count_3p_span, String chr, int alignment_start, boolean is5p){
+	public static void writeToAlignmentStart(MapFactory<Character, MapCounter<Integer>> strand_count_splice, MapFactory<Character, MapCounter<Integer>> strand_count_span, String chr, int alignment_start, boolean is5p, GTFWriter gw){
 		for(char strand : new char[]{'+','-'}){
-			SortedMultiIterator<Integer> smi = new SortedMultiIterator<Integer>(Integer.class, ((TreeMap<Integer,Integer>) strand_count_3p_splice.get(strand).getMap()).navigableKeySet().iterator(), ((TreeMap<Integer,Integer>) strand_count_3p_span.get(strand).getMap()).navigableKeySet().iterator());
+			SortedMultiIterator<Integer> smi = new SortedMultiIterator<Integer>(Integer.class, ((TreeMap<Integer,Integer>) strand_count_splice.get(strand).getMap()).navigableKeySet().iterator(), ((TreeMap<Integer,Integer>) strand_count_span.get(strand).getMap()).navigableKeySet().iterator());
 			while(smi.hasNext()){
 				Integer[] keys = smi.next();
 				Integer key = keys[0]==null?keys[1]:keys[0];
 				if(key < alignment_start){
 					if(keys[0]!=null){
 //						System.out.printf("writing pos %s:%d:%c %s %d %s %d\n", chr, key, strand, is5p?"5p_e":"3p_e", strand_count_3p_splice.get(strand).get(key), is5p?"5p_i":"3p_i", strand_count_3p_span.get(strand).get(key));
+						String type = is5p ? "j5p" : "j3p";
+						Map<String,Object> attributes = new HashMap<String, Object>();
+						if(is5p){
+							attributes.put("n5p_e", strand_count_splice.get(strand).get(key));
+							attributes.put("n5p_i", strand_count_span.get(strand).get(key));
+							}
+						else{
+							attributes.put("n3p_e", strand_count_splice.get(strand).get(key));
+							attributes.put("n3p_i", strand_count_span.get(strand).get(key));
+						}
+						gw.write(type,chr, key, key, strand,AnnotatedRegion.GTFAttributeString(attributes));
 					}
 				}
 				else{
@@ -1004,14 +972,25 @@ public class FindSpliceJunctions {
 		}
 	}
 
-	public static void writeAll(MapFactory<Character, MapCounter<Integer>> strand_count_5p_splice, MapFactory<Character, MapCounter<Integer>> strand_count_5p_span, String chr, boolean is5p){
+	public static void writeAll(MapFactory<Character, MapCounter<Integer>> strand_count_splice, MapFactory<Character, MapCounter<Integer>> strand_count_span, String chr, boolean is5p, GTFWriter gw){
 		for(char strand : new char[]{'+','-'}){
-			SortedMultiIterator<Integer> smi = new SortedMultiIterator<Integer>(Integer.class, ((TreeMap<Integer,Integer>) strand_count_5p_splice.get(strand).getMap()).navigableKeySet().iterator(), ((TreeMap<Integer,Integer>) strand_count_5p_span.get(strand).getMap()).navigableKeySet().iterator());
+			SortedMultiIterator<Integer> smi = new SortedMultiIterator<Integer>(Integer.class, ((TreeMap<Integer,Integer>) strand_count_splice.get(strand).getMap()).navigableKeySet().iterator(), ((TreeMap<Integer,Integer>) strand_count_span.get(strand).getMap()).navigableKeySet().iterator());
 			while(smi.hasNext()){
 				Integer[] keys = smi.next();
 				Integer key = keys[0]==null?keys[1]:keys[0];
 				if(keys[0]!=null){
 //					System.out.printf("writing pos %s:%d:%c %s %d %s %d\n", chr, key, strand, is5p?"5p_e":"3p_e", strand_count_5p_splice.get(strand).get(key), is5p?"5p_i":"3p_i", strand_count_5p_span.get(strand).get(key));
+					String type = is5p ? "j5p" : "j3p";
+					Map<String,Object> attributes = new HashMap<String, Object>();
+					if(is5p){
+						attributes.put("n5p_e", strand_count_splice.get(strand).get(key));
+						attributes.put("n5p_i", strand_count_span.get(strand).get(key));
+						}
+					else{
+						attributes.put("n3p_e", strand_count_splice.get(strand).get(key));
+						attributes.put("n3p_i", strand_count_span.get(strand).get(key));
+					}
+					gw.write(type,chr, key, key, strand,AnnotatedRegion.GTFAttributeString(attributes));
 				}
 			}
 		}
@@ -1467,7 +1446,7 @@ public class FindSpliceJunctions {
 			SAMFileReader sfr = new SAMFileReader(new File("/home/sol/lailab/sol/SRP017778/merged/SRR645855.bam"));
 			System.out.println(BAMTools.totalAlignedReads(sfr));
 			//			countJunctionSupportingReads(sfr, new File("/mnt/LaiLab/sol/GSE51572/test/isoscm/tmp/g.sj.bed"), new GTFWriter("/mnt/LaiLab/sol/GSE51572/test/g1.counts.gtf"));
-			countJunctionSupportingReads2(sfr, Strandedness.unstranded, new GTFWriter("/dev/stdout"));
+			countJunctionSupportingReads(sfr, Strandedness.unstranded, new GTFWriter(System.out));
 		}
 		if(false){
 			SAMFileReader sfr = new SAMFileReader(new File("/home/sol/lailab/sol/GSE41637/mapped/indexed/SRR594393.bam"));

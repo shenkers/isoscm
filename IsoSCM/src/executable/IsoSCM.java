@@ -221,7 +221,7 @@ public class IsoSCM {
 
 				logger.info("counting junction supporting reads...");
 				GTFWriter counted_sj_gtf = new GTFWriter(IO.bufferedPrintstream(splice_count_gtf));
-				FindSpliceJunctions.countJunctionSupportingReads(sfr, strandedness, splice_junction_bed, counted_sj_gtf);
+				FindSpliceJunctions.countJunctionSupportingReads(sfr, strandedness, counted_sj_gtf);
 				counted_sj_gtf.close();
 
 				logger.info("identifying covered segments...");
