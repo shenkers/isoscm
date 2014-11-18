@@ -19,6 +19,8 @@ import multisample.JointSegmentationResult;
 import net.sf.samtools.SAMFileReader;
 
 import org.apache.commons.math3.special.Beta;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import changepoint.ChangePoint;
 import tools.AnnotatedRegion;
@@ -34,6 +36,8 @@ import util.Util;
 import util.Util.ExtremeTracker;
 
 public class IdentifyChangePoints {
+
+	private static final Logger logger = LogManager.getLogger();
 
 	public static StrandedGenomicIntervalTree<Map<String, Object>> identifyUnconstrainedNegativeBinomialPoints(SAMFileReader sfr, String chr, int start, int end, int maxBins, int binSize, int minCP, Strandedness strandedness, boolean isNegativeStrand, double alpha_0, double beta_0, int nb_r, int r, double p, double min_fold){
 
@@ -52,7 +56,7 @@ public class IdentifyChangePoints {
 		if(nBins>maxBins){
 			nBins=maxBins;
 			binSize = (l+maxBins-1)/maxBins;
-			System.out.printf("for segment %s:%d-%d (%c) adjusting binSize to %d\n", chr,start,end,strand,binSize);
+			logger.info("for segment {}:{}-{}:{} adjusting binSize to {}\n", chr,start,end,strand,binSize);
 		}
 
 
@@ -116,8 +120,8 @@ public class IdentifyChangePoints {
 		if(nBins>maxBins){
 			nBins=maxBins;
 			binSize = (l+maxBins-1)/maxBins;
-			System.out.printf("for segment %s:%d-%d (%c) adjusting binSize to %d\n", chr,start,end,strand,binSize);
-		}
+			logger.info("for segment {}:{}-{}:{} adjusting binSize to {}\n", chr,start,end,strand,binSize);
+	}
 
 		// identify change points
 		// cluster them, selecting the most likely from each cluster
@@ -188,8 +192,8 @@ public class IdentifyChangePoints {
 		if(nBins>maxBins){
 			nBins=maxBins;
 			binSize = (l+maxBins-1)/maxBins;
-			System.out.printf("for segment %s:%d-%d (%c) adjusting binSize to %d\n", chr,start,end,strand,binSize);
-		}
+			logger.info("for segment {}:{}-{}:{} adjusting binSize to {}\n", chr,start,end,strand,binSize);
+	}
 
 		// identify change points
 		// cluster them, selecting the most likely from each cluster
@@ -265,7 +269,7 @@ public class IdentifyChangePoints {
 		if(nBins>maxBins){
 			nBins=maxBins;
 			binSize = (l+maxBins-1)/maxBins;
-			System.out.printf("for segment %s:%d-%d (%c) adjusting binSize to %d\n", chr,start,end,strand,binSize);
+			logger.info("for segment {}:{}-{}:{} adjusting binSize to {}\n", chr,start,end,strand,binSize);
 		}
 
 		// identify change points
@@ -332,7 +336,7 @@ public class IdentifyChangePoints {
 		if(nBins>maxBins){
 			nBins=maxBins;
 			binSize = (l+maxBins-1)/maxBins;
-			System.out.printf("for segment %s:%d-%d (%c) adjusting binSize to %d\n", chr,start,end,strand,binSize);
+			logger.info("for segment {}:{}-{}:{} adjusting binSize to {}\n", chr,start,end,strand,binSize);
 		}
 
 		// identify change points
@@ -436,8 +440,8 @@ public class IdentifyChangePoints {
 		if(nBins>maxBins){
 			nBins=maxBins;
 			binSize = (l+maxBins-1)/maxBins;
-			System.out.printf("for segment %s:%d-%d (%c) adjusting binSize to %d\n", chr,start,end,strand,binSize);
-		}
+			logger.info("for segment {}:{}-{}:{} adjusting binSize to {}\n", chr,start,end,strand,binSize);
+	}
 
 
 		// calculate the coverage in this chunk

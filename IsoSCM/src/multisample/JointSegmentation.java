@@ -13,6 +13,8 @@ import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMFileReader.ValidationStringency;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import scm.IdentifyChangePoints;
 import tools.AnnotatedRegion;
@@ -32,6 +34,7 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 
 public class JointSegmentation {
+	private static final Logger logger = LogManager.getLogger();
 
 	public static void performJointSegmentationUsingReference(String ensemblf, String id1, String id2, String exons1, String exons2, String bam1, String bam2, String outFile) throws FileNotFoundException {
 
@@ -157,6 +160,7 @@ public class JointSegmentation {
 		StrandedGenomicIntervalTree<Map<String,Object>> exons1 = IntervalTools.buildRegionsTree(new TranscriptIterator(spliced_exons1), true, true, true);
 		StrandedGenomicIntervalTree<Map<String,Object>> exons2 = IntervalTools.buildRegionsTree(new TranscriptIterator(spliced_exons2), true, true, true);
 
+		logger.info("identifying common terminal exons...");
 		StrandedGenomicIntervalTree<Map<String, Object>> maxCommonExons = getMaxCommonExons(exons1, exons2, strandedness1, strandedness2);
 		StrandedGenomicIntervalTree<Map<String, Object>> t5p = IntervalTools.buildTerminiTree(maxCommonExons, true, true, false);
 
@@ -173,7 +177,8 @@ public class JointSegmentation {
 				strandedness1,
 				strandedness2,
 		};
-
+		
+		logger.info("Performing joint segmentation...");
 		GTFWriter gw = new GTFWriter(IO.bufferedPrintstream(gtf));
 		PrintStream tabular = IO.bufferedPrintstream(table);
 		tabular.printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", "samples","locus_id","changepoint","confidence","log_odds","upstream_segment","downstream_segment","locus","strand","upstream_cov","downstream_cov","site_usage","differential_usage");

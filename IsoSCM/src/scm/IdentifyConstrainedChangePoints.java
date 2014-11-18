@@ -2,12 +2,7 @@ package scm;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.Random;
 
 import multisample.JointSegmentationResult;
 
@@ -17,13 +12,10 @@ import org.apache.commons.math3.special.Beta;
 import org.apache.commons.math3.special.Gamma;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jfree.chart.JFreeChart;
 
-import util.ChartUtils;
 import util.Util;
 import util.Util.ExtremeObjectTracker;
 import util.Util.IntegralTable;
-import util.Util.MapCounter;
 import util.Util.MapList;
 import cern.jet.random.NegativeBinomial;
 import cern.jet.random.engine.RandomEngine;
@@ -1889,11 +1881,13 @@ public class IdentifyConstrainedChangePoints {
 			Ys.add(pd.nextDouble());
 		}
 
+		/*
 		{
 			JFreeChart jfc0 = ChartUtils.createScatterChart(data.getMap(), "", "", "", false);
 			ChartUtils.setDomainAxisRange(jfc0, 0, Ys.size());
 			ChartUtils.showChart(jfc0);
 		}
+		*/
 
 		data.getMap().clear();
 		{
@@ -1946,6 +1940,7 @@ public class IdentifyConstrainedChangePoints {
 		System.out.printf("cc %.6f %.3f\n", Math.exp(cc.calculateConfidence(l-40, l+40).log_confidence), cc.calculateConfidence(l-40, l+40).log_odds);
 //		System.out.printf("cc %.6f %.3f\n", Math.exp(cc.calculateConfidence(l-80, l+80).log_confidence), cc.calculateConfidence(l-80, l+80).log_odds);
 		
+		/*
 		{
 			MapList<String, Double[]> ml = new MapList<String, Double[]>();
 			for(int i=0;i<jsr.change_point.length;i++){
@@ -1956,7 +1951,7 @@ public class IdentifyConstrainedChangePoints {
 			JFreeChart jfc = ChartUtils.createLineChart(ml.getMap(), "", "", "", false);
 			ChartUtils.showChart(jfc);
 		}
-
+*/
 
 	}
 }

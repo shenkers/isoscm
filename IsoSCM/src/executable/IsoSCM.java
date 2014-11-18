@@ -214,17 +214,17 @@ public class IsoSCM {
 
 				SAMFileReader.setDefaultValidationStringency(ValidationStringency.SILENT);
 				SAMFileReader sfr = new SAMFileReader(bamFile);
-				System.out.println("finding junctions");
+				logger.info("tabulating splice junctions...");
 				BEDWriter sj_bw = new BEDWriter(IO.bufferedPrintstream(splice_junction_bed));
 				FindSpliceJunctions.tabulateSpliceJunctions(sfr, sj_bw);
 				sj_bw.close();
 
-				System.out.println("counting junction supporting reads");
+				logger.info("counting junction supporting reads...");
 				GTFWriter counted_sj_gtf = new GTFWriter(IO.bufferedPrintstream(splice_count_gtf));
 				FindSpliceJunctions.countJunctionSupportingReads(sfr, strandedness, splice_junction_bed, counted_sj_gtf);
 				counted_sj_gtf.close();
 
-				System.out.println("finding expressed segments");
+				logger.info("identifying covered segments...");
 				BEDWriter seg_bw = new BEDWriter(IO.bufferedPrintstream(segment_bed));
 				SlidingWindow.identifyExpressed(sfr, strandedness, 1, assemble.threshold, 1, seg_bw);
 				seg_bw.close();
@@ -232,14 +232,14 @@ public class IsoSCM {
 				if(assemble.insert_size_quantile!=null){
 					File matepair_bed = FileUtils.getFile(tmp_dir,assemble.base+".mate_pair.bed");
 					File scaffolded_bed = FileUtils.getFile(tmp_dir,assemble.base+".scaffolded.bed");
-					System.out.println("calculating insert size quantile");
+					
+					logger.info("estimating insert size...");
 					int insert_size = ClusterExpressedSegments.estimateMateInsertSize(sfr, strandedness, segment_bed, assemble.insert_size_quantile);
-					System.out.printf("%.3fth-quantile insert size = %s bp\n", assemble.insert_size_quantile, insert_size);
-					System.out.println("identifying proper mate pairs");
+					logger.info("%.3fth-quantile insert size = %s bp\n", assemble.insert_size_quantile, insert_size);
 					BEDWriter matepair_bw = new BEDWriter(IO.bufferedPrintstream(matepair_bed));
 					ClusterExpressedSegments.identifySpannableRegions(sfr, strandedness, matepair_bw, insert_size);
 					matepair_bw.close();
-					System.out.println("scaffolding segments spanned by mate pairs");
+					logger.info("scaffolding gaps spanned by mate pairs...");
 					BEDWriter scaffolded_bw = new BEDWriter(IO.bufferedPrintstream(scaffolded_bed));
 					ClusterExpressedSegments.scaffoldSpannableRegions(segment_bed, matepair_bed, scaffolded_bw);
 					scaffolded_bw.close();
@@ -288,13 +288,13 @@ public class IsoSCM {
 				SAMFileReader.setDefaultValidationStringency(ValidationStringency.SILENT);
 				SAMFileReader sfr = new SAMFileReader(bamFile);
 
-				System.out.println("merging gapped segments");
+				logger.info("merging coverage gaps less than {} bp...", assemble.merge_radius);				
 				BEDWriter merged_segments = new BEDWriter(IO.bufferedPrintstream(merged_segment_bed));
 				File merge_regions = assemble.filled_gap_segments == null? null : assemble.filled_gap_segments;
 				ClusterExpressedSegments.mergeSegments(segment_bed, merge_regions, merged_segments, assemble.merge_radius);
 				merged_segments.close();
 
-				System.out.println("filtering splice junctions");
+				logger.info("filtering splice junctions...");
 				GTFWriter passed_jnct_gw = new GTFWriter(IO.bufferedPrintstream(acc_jnct_gtf));
 				GTFWriter failed_jnct_gw = new GTFWriter(IO.bufferedPrintstream(rej_jnct_gtf));
 				FindSpliceJunctions.filterCountedJunctions(splice_junction_bed, splice_count_gtf, jnct_alpha, passed_jnct_gw, failed_jnct_gw);
@@ -302,7 +302,7 @@ public class IsoSCM {
 				failed_jnct_gw.close();
 
 				if(strandedness==Strandedness.unstranded){
-					System.out.println("inferring strand from spliced reads");
+					logger.info("inferring segment strand from spliced reads...");
 					BEDWriter inferred_strand_segment = new BEDWriter(IO.bufferedPrintstream(inferred_strand_segment_bed));
 					ClusterExpressedSegments.inferSegmentStrand(acc_jnct_gtf, merged_segment_bed, inferred_strand_segment);
 					inferred_strand_segment.close();
@@ -310,14 +310,14 @@ public class IsoSCM {
 				}
 
 				//cluster
-				System.out.println("identifying spliced exons");
+				logger.info("identifying spliced exons...");
 				//				double expressed_threshold = segment.threshold;
 				GTFWriter spliced_exons = new GTFWriter(IO.bufferedPrintstream(spliced_exon_gtf));
 				ClusterExpressedSegments.identifySplicedExons(acc_jnct_gtf, merged_segment_bed, spliced_exons);
 				spliced_exons.close();
 
 				if(strandedness==Strandedness.unstranded){
-					System.out.println("trimming inferred exons that overlap on opposite strands");
+					logger.info("trimming exons that overlap on opposite strands...");
 					GTFWriter trimmed_exons = new GTFWriter(IO.bufferedPrintstream(trimmed_exon_gtf));
 					ClusterExpressedSegments.trimInferredExons(spliced_exon_gtf, trimmed_exons);
 					trimmed_exons.close();
@@ -333,8 +333,8 @@ public class IsoSCM {
 				intronic_exon_writer.close();
 
 				// run SCM to identify changepoints in exons that are sufficiently long, use intronic and spliced exons as input.
-				System.out.println("identifying change points");
-
+				
+				logger.info("identifying change points...");
 				//negative binomial hyper parameters
 				double alpha_0 = 1.0;
 				double beta_0 = 1.0;
@@ -356,30 +356,30 @@ public class IsoSCM {
 				IdentifyChangePoints.identifyNegativeBinomialChangePointsInLongSegments(sfr, spliced_exon_gtf, intronic_exon_gtf, changepoint_writer, minLength, maxBins, binSize, minCP, strandedness, alpha_0, beta_0, nb_r, r, p, internal, min_fold, min_terminal, confidence_interval);
 				changepoint_writer.close();
 
-				System.out.println("filtering change points");
+				logger.info("filtering change points close to splice junctions...");
 				int sj_radius = binSize*1;
 				GTFWriter filtered_changepoint_writer = new GTFWriter(IO.bufferedPrintstream(filtered_changepoint_gtf));
 				IdentifyChangePoints.filterChangePoints(sfr, spliced_exon_gtf, intronic_exon_gtf, acc_jnct_gtf, changepoint_gtf, filtered_changepoint_writer, sj_radius);
 				filtered_changepoint_writer.close();
 
-				System.out.println("enumerating change point exons");
+				logger.info("enumerating change point exons...");
 				GTFWriter changepoint_exon_writer = new GTFWriter(IO.bufferedPrintstream(changepoint_exon_gtf));
 				IdentifyChangePoints.enumerateChangepointExons(spliced_exon_gtf, intronic_exon_gtf, filtered_changepoint_gtf, changepoint_exon_writer);
 				changepoint_exon_writer.close();
 
 				//output models
-				System.out.println("identifying connected components");
+				logger.info("identifying connected components...");
 				GTFWriter assembly_writer = new GTFWriter(IO.bufferedPrintstream(assembly_gtf));
 				ExonSpliceGraph.labelConnectedComponents(acc_jnct_gtf, spliced_exon_gtf, intronic_exon_gtf, changepoint_exon_gtf, assembly_writer);
 				assembly_writer.close();
 
-				System.out.println("identifying unspliced segments");
+				logger.info("identifying unspliced segments...");
 				GTFWriter remainder_writer = new GTFWriter(IO.bufferedPrintstream(unspliced));
 				ClusterExpressedSegments.writeUnsplicedRemainder(merged_segment_bed, assembly_gtf, remainder_writer);
 				remainder_writer.close();
 
 				if(assemble.coverage){
-					System.out.println("calculating coverage");
+					logger.info("calculating coverage...");
 					File coverage_gtf = new File(Util.sprintf("%s/%s.coverage.gtf",assemble.dir, assemble.base));
 					File coverage_unspliced = new File(Util.sprintf("%s/%s.unspliced.coverage.gtf",assemble.dir, assemble.base));
 
