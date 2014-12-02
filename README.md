@@ -162,3 +162,5 @@ Optional arguments:
 ```
 
 #IsoSCM Output
+
+[![Analytics](https://ga-beacon.appspot.com/UA-55176595-1/isoscm/readme?pixel)](https://github.com/shenkers/isoscm/ga-beacon)
