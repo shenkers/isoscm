@@ -848,16 +848,6 @@ public class FindSpliceJunctions {
 	
 
 	public static void countJunctionSupportingReads(SAMFileReader sfr, Strandedness strandedness, GTFWriter gw) throws FileNotFoundException{	
-		//		TreeMap<Integer, Integer> pos_tree_5p_splice =new TreeMap<Integer, Integer>();
-		//		TreeMap<Integer, Integer> neg_tree_5p_splice =new TreeMap<Integer, Integer>();
-		//		TreeMap<Integer, Integer> pos_tree_5p_span = new TreeMap<Integer, Integer>();
-		//		TreeMap<Integer, Integer> neg_tree_5p_span = new TreeMap<Integer, Integer>();
-		//		MapCounter<Integer> pos_count_5p_splice = new MapCounter<Integer>(pos_tree_5p_splice);
-		//		MapCounter<Integer> neg_count_5p_splice = new MapCounter<Integer>(neg_tree_5p_splice);
-		//		MapCounter<Integer> pos_count_5p_span = new MapCounter<Integer>(pos_tree_5p_span);
-		//		MapCounter<Integer> neg_count_5p_span = new MapCounter<Integer>(neg_tree_5p_span);
-		//		Map<Character,MapCounter<Integer>> strand_count_5p_splice = new HashMap<Character, MapCounter<Integer>>();
-		//		Map<Character,MapCounter<Integer>> strand_count_5p_span = new HashMap<Character, MapCounter<Integer>>();
 
 		Instantiator<MapCounter<Integer>> i = new Instantiator<MapCounter<Integer>>() {
 			public MapCounter<Integer> instantiate(Object... objects) {
@@ -881,7 +871,8 @@ public class FindSpliceJunctions {
 			
 			if(prev_chr!=null && !chr.equals(prev_chr)){
 				writeAll(strand_count_5p_splice,strand_count_5p_span, prev_chr, true,gw);
-				writeAll(strand_count_5p_splice,strand_count_5p_span, prev_chr, false,gw);
+				// IMPORTANT: corrected error when last read aligned to the chromosome is spliced
+				writeAll(strand_count_3p_splice,strand_count_3p_span, prev_chr, false,gw);
 				strand_count_5p_splice.getMap().clear();
 				strand_count_5p_span.getMap().clear();
 				strand_count_3p_splice.getMap().clear();
@@ -900,30 +891,13 @@ public class FindSpliceJunctions {
 			removeToAlignmentStart(strand_count_3p_splice,alignment_start);
 			removeToAlignmentStart(strand_count_3p_span,alignment_start);
 			
+			// IMPORTANT: corrected error when last read aligned to the chromosome is spliced
+			prev_chr = chr;
 		}
 		sri.close();
 
 		writeAll(strand_count_5p_splice,strand_count_5p_span, prev_chr, true,gw);
 		writeAll(strand_count_3p_splice,strand_count_3p_span, prev_chr, false,gw);
-
-		//		for(AnnotatedRegion r : j5p){
-		//			Map<String,Object> attributes = new HashMap<String, Object>();
-		//			for(String key : Util.list("n5p_e","n5p_i")){
-		//				attributes.put(key, ((MapCounter<String>) r.getAttribute("counts")).get(key));
-		//			}
-		//			gw.write("j5p",r.chr, r.start, r.end, r.strand,AnnotatedRegion.GTFAttributeString(attributes));
-		//			//			System.out.printf("%s\t%s\n", r,((MapCounter<String>) r.getAttribute("counts")).getMap());
-		//		}
-		//		for(AnnotatedRegion r : j3p){
-		//			Map<String,Object> attributes = new HashMap<String, Object>();
-		//			for(String key : Util.list("n3p_e","n3p_i")){
-		//				attributes.put(key, ((MapCounter<String>) r.getAttribute("counts")).get(key));
-		//			}
-		//			gw.write("j3p",r.chr, r.start, r.end, r.strand,AnnotatedRegion.GTFAttributeString(attributes));
-		//			//			System.out.printf("%s\t%s\n", r,((MapCounter<String>) r.getAttribute("counts")).getMap());
-		//		}
-		//
-		//		gw.close();
 	}
 
 	public static void writeToAlignmentStart(MapFactory<Character, MapCounter<Integer>> strand_count_splice, MapFactory<Character, MapCounter<Integer>> strand_count_span, String chr, int alignment_start, boolean is5p, GTFWriter gw){
