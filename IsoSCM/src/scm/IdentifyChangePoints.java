@@ -242,7 +242,7 @@ public class IdentifyChangePoints {
 						attributes.put("before_mle", segment_mle[i]);
 						attributes.put("after_mle", segment_mle[i+1]);
 						attributes.put("type","changepoint");
-						ConfidenceResult cr = cc.calculateConfidence(Math.max(changepoint_i-confidence_interval,0), Math.min(changepoint_i+1+confidence_interval,prefix_suffix.l));
+						ConfidenceResult cr = cc.calculateConfidence(Math.max(changepoint_i-confidence_interval,0), Math.min(changepoint_i+1+confidence_interval,prefix_suffix.l-2));
 						attributes.put("confidence",Util.sprintf("%.3e", Math.exp(cr.log_confidence)));
 						attributes.put("log_odds",Util.sprintf("%.3e", cr.log_odds));
 
@@ -392,7 +392,7 @@ public class IdentifyChangePoints {
 						before_mles.add(segment_mle[i]);
 						after_mles.add(segment_mle[i+1]);
 						
-						ConfidenceResult cr = cc.calculateConfidence(Math.max(changepoint_i-confidence_interval,0), Math.min(changepoint_i+1+confidence_interval,prefix_suffix.l));
+						ConfidenceResult cr = cc.calculateConfidence(Math.max(changepoint_i-confidence_interval,0), Math.min(changepoint_i+1+confidence_interval,prefix_suffix.l-2));
 						confidences.add(Math.exp(cr.log_confidence));
 						l_odds.add(cr.log_odds);
 
@@ -479,7 +479,7 @@ public class IdentifyChangePoints {
 						attributes.put("after_mle", segment_mle[i+1]);
 						attributes.put("type","changepoint");
 						
-						ConfidenceResult cr = cc.calculateConfidence(Math.max(changepoint_i-confidence_interval,0), Math.min(changepoint_i+1+confidence_interval,prefix_suffix.l));
+						ConfidenceResult cr = cc.calculateConfidence(Math.max(changepoint_i-confidence_interval,0), Math.min(changepoint_i+1+confidence_interval,prefix_suffix.l-2));
 						attributes.put("confidence",Util.sprintf("%.3e", Math.exp(cr.log_confidence)));
 						attributes.put("log_odds",Util.sprintf("%.3e", cr.log_odds));
 
