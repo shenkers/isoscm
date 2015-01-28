@@ -35,6 +35,8 @@ The functions of IsoSCM described above are performed by the _assemble_, _enumer
 
 #Running IsoSCM
 
+The latest version of the IsoSCM executable jar can be downloaded from [here](https://github.com/shenkers/isoscm/releases/latest).
+
 ##_assemble_ command
 
 ```
