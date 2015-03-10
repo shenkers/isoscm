@@ -165,4 +165,25 @@ Optional arguments:
 
 #IsoSCM Output
 
+##Assemble command
+
+Depending on the command line arguments used, the output of the _assemble_ command will be found in
+
+[dir]/[basename].gtf
+
+These two files are GTF format files representing assembled exons and splice junctions between them. The first file ([dir]/[basename].gtf) will contain all assembled loci that are inferred to contain at least one splice junction. Each line of this file represents either an _exon_ or a _splice-juction_, as specified in the 3rd column. Each feature in assembly GTF file will also have attributes for a "locus_id". All exons that either overlap, or are connected by splice junctions are assigned a common locus_id. For convenience, exons are assigned an additional attribute "type" which represents the relative order of that exon in the transcript model, which can be one of "3p_exon", "5p_exon", or "internal_exon". It's important to keep in mind that the transcript model may be fragmented, especially in the case of low-coverage genes. If the assembled transcript model is fragmented these assignments of 3p_exon or 5p_exon will be incorrect. Conversely, if two genes are very proximally located they may instead be innapropriately merged by the assembly process. To avoid these cases, a more conservative approach should be used to use RNA-seq data to refine transcript annotations only where the assembled models do not conflict with (merge or internally truncate) reference transcript models.
+
+Assembled transcripts that do not overlap any spliced reads are reported as transcribed segments in a second file:
+
+[dir]/[basename].unspliced.gtf 
+
+The format of this file is the same as the GTF representing spliced transcript models. An important thing to keep in mind when analyzing reads generated using unstranded sequencing protocols is that the strandedness of assembled transcripts is inferred from reads containing splice junctions. To represent this ambiguity, the transcribed segments reported in this file will have with a strand of '.' when assembling unstranded reads.
+
+Finally, if the _assemble_ command is run with the _-coverage true_ flag additional files:
+
+[dir]/[basename].coverage.gtf
+[dir]/[basename].unspliced.coverage.gtf
+
+will be generated. These files will be the same as the two other GTF files, except that each exon will have an associated "coverage" value, representing a rough estimate of read density over that exon. The coverage represents the median read coverage over each segment of the exon. This quantity is not intended to be used a rigorous metric isoform abundance, but rather as an aid to quickly identify exon models supported by less evidence.
+
 [![Analytics](https://ga-beacon.appspot.com/UA-55176595-1/isoscm/readme?pixel)](https://github.com/shenkers/isoscm/ga-beacon)
