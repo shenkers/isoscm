@@ -41,6 +41,10 @@ The functions of IsoSCM described above are performed by the _assemble_, _enumer
 
 The latest version of the IsoSCM executable jar can be downloaded from [here](https://github.com/shenkers/isoscm/releases/latest).
 
+You can also build IsoSCM from github repository by sbt. SBT can be downloaded from ( http://www.scala-sbt.org/download.html ).
+To build IsoSCM from sbt you should open sbt console by typing `sbt` and use either `run` command to run it directly from sbt or `assembly` command to assemble IsoSCM.jar in target folder. You can also generate Eclipse sources by `eclipse` command
+
+
 ##_assemble_ command
 
 ```
