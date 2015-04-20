@@ -766,7 +766,10 @@ public class FindSpliceJunctions {
 			if(cigarElement.getOperator().consumesReferenceBases()){
 				boolean consumesReadBases = cigarElement.getOperator().consumesReadBases();
 
-				if(consumesReadBases){
+				if(cigarElement.getOperator()==CigarOperator.N){
+					alignmentPosition+=cigarElement.getLength();
+				}
+				else{
 					for(int j=0; j<cigarElement.getLength(); j++){
 						if(lastAlignedPosition!=null){
 
@@ -796,9 +799,6 @@ public class FindSpliceJunctions {
 						lastAlignedPosition = alignmentPosition;
 						alignmentPosition++;
 					}
-				}
-				else{
-					alignmentPosition+=cigarElement.getLength();
 				}
 			}			
 			prevCigarElement = cigarElement;
