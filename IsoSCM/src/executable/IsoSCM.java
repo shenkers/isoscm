@@ -595,7 +595,7 @@ public class IsoSCM {
 			Strandedness s1=Strandedness.valueOf(assemblyConfiguration1.strandedness); Strandedness s2=Strandedness.valueOf(assemblyConfiguration2.strandedness);
 
 			File spliced_exon_gtf1 = FileUtils.getFile(assemblyConfiguration1.dir,"tmp",assemblyConfiguration1.base+".exon"+(s1==Strandedness.unstranded?".trimmed":"")+".gtf");
-			File spliced_exon_gtf2 = FileUtils.getFile(assemblyConfiguration1.dir,"tmp",assemblyConfiguration2.base+".exon"+(s2==Strandedness.unstranded?".trimmed":"")+".gtf");
+			File spliced_exon_gtf2 = FileUtils.getFile(assemblyConfiguration2.dir,"tmp",assemblyConfiguration2.base+".exon"+(s2==Strandedness.unstranded?".trimmed":"")+".gtf");
 
 			File table = FileUtils.getFile(compare.dir,Util.sprintf("%s.txt",compare.base));
 			File gtf = FileUtils.getFile(compare.dir,Util.sprintf("%s.gtf",compare.base));
