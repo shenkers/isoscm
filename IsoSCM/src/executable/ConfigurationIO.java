@@ -67,7 +67,7 @@ public class ConfigurationIO {
 	 * @throws JAXBException
 	 */
 	public static CompareCommand readCompareConfiguration(File configuration_xml) throws JAXBException{
-		JAXBContext jaxbc = JAXBContext.newInstance(AssembleCommand.class);
+		JAXBContext jaxbc = JAXBContext.newInstance(CompareCommand.class);
 		
 		Unmarshaller um = jaxbc.createUnmarshaller();
 		

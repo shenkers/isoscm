@@ -163,6 +163,7 @@ public class IsoSCM {
 		AssembleCommand assemble = new AssembleCommand();
 		SegmentCommand segment = new SegmentCommand();
 		CompareCommand compare = new CompareCommand();
+		DiffCommand diff = new DiffCommand();
 		EnumerateCommand enumerate = new EnumerateCommand();
 		HelpCommand help = new HelpCommand();
 
@@ -170,6 +171,7 @@ public class IsoSCM {
 		jc.addCommand("segment", segment);
 		jc.addCommand("compare", compare);
 		jc.addCommand("enumerate", enumerate);
+		jc.addCommand("diff", diff);
 		jc.addCommand("-h", help);
 		try{
 			jc.parse(args);		
@@ -613,6 +615,11 @@ public class IsoSCM {
 			JointSegmentation.performJointSegmentation(assemblyConfiguration1.base, assemblyConfiguration2.base, spliced_exon_gtf1, spliced_exon_gtf2, assemblyConfiguration1.bam, assemblyConfiguration2.bam, table, gtf,s1,s2, maxBins, binSize, minCP, alpha_0, beta_0, nb_r, r, p, min_fold, confidence_interval);
 
 			logger.info("compare comleted.");
+		}
+		else if(jc.getParsedCommand().equals("diff")){
+			CompareCommand compareConfiguration = ConfigurationIO.readCompareConfiguration(diff.compareXml);
+			File compareGtf = FileUtils.getFile(compareConfiguration.dir,Util.sprintf("%s.gtf",compareConfiguration.base));
+			processing.DiffReference.diff(diff.refGtf, compareGtf);	
 		}
 		}
 		catch(ParameterException e){
