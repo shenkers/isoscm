@@ -114,7 +114,7 @@ public class FindSpliceJunctions {
 		return splice_junctions;
 	}
 
-	public static StrandedGenomicIntervalTree<Map<String,Object>> tabulateSpliceJunctions(SAMFileReader sfr, BEDWriter bw){
+	public static StrandedGenomicIntervalTree<Map<String,Object>> tabulateSpliceJunctions(SAMFileReader sfr, Strandedness strandedness, BEDWriter bw){
 		Map<String,Integer> referenceLengths = BAMTools.referenceSequenceLengths(sfr.getFileHeader());
 
 		StrandedGenomicIntervalTree<Map<String,Object>> splice_junctions = new StrandedGenomicIntervalTree<Map<String,Object>>();
@@ -129,6 +129,9 @@ public class FindSpliceJunctions {
 			while(sri.hasNext()){
 				SAMRecord sr = sri.next();
 				if(sr.getCigarString().indexOf('N') == -1)
+					continue;
+				
+				if(strandedness!=Strandedness.unstranded && sr.getAttribute("XS")!=null && BAMTools.strand(sr, strandedness)!=sr.getCharacterAttribute("XS"))
 					continue;
 
 				Cigar cigar = sr.getCigar();
@@ -868,6 +871,9 @@ public class FindSpliceJunctions {
 			SAMRecord sr = sri.next();
 			String chr = sr.getReferenceName();
 			int alignment_start = sr.getAlignmentStart();
+			
+			if(strandedness!=Strandedness.unstranded && sr.getAttribute("XS")!=null && BAMTools.strand(sr, strandedness)!=sr.getCharacterAttribute("XS"))
+				continue;
 			
 			if(prev_chr!=null && !chr.equals(prev_chr)){
 				writeAll(strand_count_5p_splice,strand_count_5p_span, prev_chr, true,gw);

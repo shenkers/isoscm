@@ -218,7 +218,7 @@ public class IsoSCM {
 				SAMFileReader sfr = new SAMFileReader(bamFile);
 				logger.info("tabulating splice junctions...");
 				BEDWriter sj_bw = new BEDWriter(IO.bufferedPrintstream(splice_junction_bed));
-				FindSpliceJunctions.tabulateSpliceJunctions(sfr, sj_bw);
+				FindSpliceJunctions.tabulateSpliceJunctions(sfr, strandedness, sj_bw);
 				sj_bw.close();
 
 				logger.info("counting junction supporting reads...");
