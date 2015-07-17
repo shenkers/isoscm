@@ -3,6 +3,7 @@ package splicegraph;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -301,7 +302,7 @@ public class ExonSpliceGraph {
 
 		Set<String> skipped_ids = new HashSet<String>();
 		for(AnnotatedRegion r : exon_5p){	
-			if(max_paths == null || countPaths(r, exon_3p, sj5p) < max_paths){
+			if(max_paths == null || countPaths(r, exon_3p, sj5p).compareTo(new BigInteger(String.format("%d", max_paths))) < 0){
 				Stack<AnnotatedRegion> isoform_exons = new Stack<AnnotatedRegion>();
 				iterateIsoforms(isoform_count, isoform_exons, r, exon_3p, sj5p, isoform_gtf);
 			}
@@ -372,21 +373,22 @@ public class ExonSpliceGraph {
 		return children;
 	}
 
-	public static Integer countPaths(AnnotatedRegion r, StrandedGenomicIntervalTree<Map<String, Object>> exon_3p, StrandedGenomicIntervalTree<Map<String, Object>> sj5p){
+	public static BigInteger countPaths(AnnotatedRegion r, StrandedGenomicIntervalTree<Map<String, Object>> exon_3p, StrandedGenomicIntervalTree<Map<String, Object>> sj5p){
 		String path_att = "nPaths";
 		
-		Integer nPaths = (Integer) r.getAttribute(path_att);
+		BigInteger nPaths = (BigInteger) r.getAttribute(path_att);
 		
 		if(nPaths==null){
 			List<AnnotatedRegion> children = listChildren(r, exon_3p, sj5p);
 
 			if(children.size()==0){
-				nPaths=1;
+				nPaths=new BigInteger("1");
 			}
 			else{
-				nPaths = 0;
+				nPaths = new BigInteger("0");
 				for(AnnotatedRegion c : children){
-					nPaths += countPaths(c, exon_3p, sj5p);
+					nPaths = nPaths.add(countPaths(c, exon_3p, sj5p));
+//					nPaths += countPaths(c, exon_3p, sj5p);
 				}
 			}
 			
@@ -420,7 +422,7 @@ public class ExonSpliceGraph {
 		}
 
 		for(AnnotatedRegion r : exon_5p){	
-			int n = countPaths(r,exon_3p,sj5p);
+			int n = countPaths(r,exon_3p,sj5p).intValue();
 			System.out.printf("e5p %s %d\n", r,n);
 		}
 	}
