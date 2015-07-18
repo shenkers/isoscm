@@ -345,7 +345,8 @@ public class ClusterExpressedSegments {
 			StrandedGenomicIntervalTree<Map<String,Object>> written = new StrandedGenomicIntervalTree<Map<String,Object>>();
 
 			for(AnnotatedRegion splice5p : splice5ps.overlappingRegions(r.chr, r.start-1, r.end+1, r.strand)){
-				AnnotatedRegion splice3p = splice3ps.getClosestUpstream(splice5p.chr, splice5p.start, r.strand);
+				int p = IntervalTools.offsetPosition(splice5p.start, 2, r.isNegativeStrand(), true);
+				AnnotatedRegion splice3p = splice3ps.getClosestUpstream(splice5p.chr, p, r.strand);
 				if(splice3p!=null && intervalContains(splice3p.start, r.start-1, r.end+1)){
 					while(splice3p!=null && intervalContains(splice3p.start, r.start-1, r.end+1)){
 						// write internal exon
@@ -355,7 +356,7 @@ public class ClusterExpressedSegments {
 							Map<String,Object> attributes = new HashMap<String, Object>();
 							attributes.put("type", "internal_exon");
 							// as long as there is no nested splice junction
-							if(IntervalTools.ContainedIntervals(sj, r.chr, start, end, r.strand).size()==0){
+							if(IntervalTools.ContainedIntervals(sj, r.chr, start+1, end-1, r.strand).size()==0){
 								written.add(r.chr, start+1, end-1, r.strand);
 								exons.write("exon", r.chr, start+1, end-1, r.strand,AnnotatedRegion.GTFAttributeString(attributes));
 							}
@@ -380,7 +381,8 @@ public class ClusterExpressedSegments {
 			}
 
 			for(AnnotatedRegion splice3p : splice3ps.overlappingRegions(r.chr, r.start-1, r.end+1, r.strand)){
-				AnnotatedRegion splice5p = splice5ps.getClosestDownstream(splice3p.chr, splice3p.start, r.strand);
+				int p = IntervalTools.offsetPosition(splice3p.start, 2, r.isNegativeStrand(), false);
+				AnnotatedRegion splice5p = splice5ps.getClosestDownstream(splice3p.chr, p, r.strand);
 				if(splice5p!=null && intervalContains(splice5p.start, r.start-1, r.end+1)){
 					while(splice5p!=null && intervalContains(splice5p.start, r.start-1, r.end+1)){
 						// write internal exon
@@ -390,7 +392,7 @@ public class ClusterExpressedSegments {
 							Map<String,Object> attributes = new HashMap<String, Object>();
 							attributes.put("type", "internal_exon");
 							// as long as there is no nested splice junction
-							if(IntervalTools.ContainedIntervals(sj, r.chr, start, end, r.strand).size()==0){
+							if(IntervalTools.ContainedIntervals(sj, r.chr, start+1, end-1, r.strand).size()==0){
 								written.add(r.chr, start+1, end-1, r.strand);
 								exons.write("exon", r.chr, start+1, end-1, r.strand, AnnotatedRegion.GTFAttributeString(attributes));
 							}
