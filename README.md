@@ -64,10 +64,6 @@ IsoSCM has a number of optional arguments with default values pertaining to eith
 
 Assembly arguments:
 ```
-          -c                      bin width for evaluating the confidence of a
-                                  change point
-                                  Default: 2
-                                  
           -coverage               whether or not to calculate coverage of
                                   generated models
                                   Default: true
@@ -175,7 +171,7 @@ Depending on the command line arguments used, the output of the _assemble_ comma
 
 [assemble-dir]/[assemble-basename].gtf
 
-These two files are GTF format files representing assembled exons and splice junctions between them. The first file ([dir]/[basename].gtf) will contain all assembled loci that are inferred to contain at least one splice junction. Each line of this file represents either an _exon_ or a _splice-juction_, as specified in the 3rd column. Each feature in assembly GTF file will also have attributes for a "locus_id". All exons that either overlap, or are connected by splice junctions are assigned a common locus_id. For convenience, exons are assigned an additional attribute "type" which represents the relative order of that exon in the transcript model, which can be one of "3p_exon", "5p_exon", or "internal_exon". It's important to keep in mind that the transcript model may be fragmented, especially in the case of low-coverage genes. If the assembled transcript model is fragmented these assignments of 3p_exon or 5p_exon will be incorrect. Conversely, if two genes are very proximally located they may instead be innapropriately merged by the assembly process. To avoid these cases, a more conservative approach should be used to use RNA-seq data to refine transcript annotations only where the assembled models do not conflict with (merge or internally truncate) reference transcript models.
+These two files are GTF format files representing assembled exons and splice junctions between them. The first file ([dir]/[basename].gtf) will contain all assembled loci that are inferred to contain at least one splice junction. Each line of this file represents either an _exon_ or a _splice-juction_, as specified in the 3rd column. Each feature in assembly GTF file will also have attributes for a "locus_id". All exons that either overlap, or are connected by splice junctions are assigned a common locus_id. For convenience, exons are assigned an additional attribute "type" which represents the relative order of that exon in the transcript model, which can be one of "3p_exon", "5p_exon", or "internal_exon". It's important to keep in mind that the transcript model may be fragmented, especially in the case of low-coverage genes. If the assembled transcript model is fragmented these assignments of 3p_exon or 5p_exon will be incorrect. Conversely, if two genes are very proximally located they may instead be innapropriately merged by the assembly process. 
 
 Assembled transcripts that do not overlap any spliced reads are reported as transcribed segments in a second file:
 
@@ -279,5 +275,15 @@ differential_usage
 the difference in estimated site usage (see Overview). This will correspond to site_usage in the first sample minus the site_usage in the second sample.
 </dd>
 </dl>
+
+##Building from source
+
+IsoSCM uses maven as a build system. To build IsoSCM change into the root directory and type:
+
+```
+mvn clean compile assembly:single
+```
+
+The executable .jar can be found in the sub-directory target/IsoSCM-[version].jar
 
 [![Analytics](https://ga-beacon.appspot.com/UA-55176595-1/isoscm/readme?pixel)](https://github.com/shenkers/isoscm/ga-beacon)
