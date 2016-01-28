@@ -354,8 +354,7 @@ public class IsoSCM {
 				boolean internal=assemble.internal;
 				double min_fold = assemble.min_fold;
 				int min_terminal = -assemble.min_terminal;
-				int confidence_interval = assemble.c;
-				IdentifyChangePoints.identifyNegativeBinomialChangePointsInLongSegments(sfr, spliced_exon_gtf, intronic_exon_gtf, changepoint_writer, minLength, maxBins, binSize, minCP, strandedness, alpha_0, beta_0, nb_r, r, p, internal, min_fold, min_terminal, confidence_interval);
+				IdentifyChangePoints.identifyNegativeBinomialChangePointsInLongSegments(sfr, spliced_exon_gtf, intronic_exon_gtf, changepoint_writer, minLength, maxBins, binSize, minCP, strandedness, alpha_0, beta_0, nb_r, r, p, internal, min_fold, min_terminal);
 				changepoint_writer.close();
 
 				logger.info("filtering change points close to splice junctions...");
@@ -508,7 +507,7 @@ public class IsoSCM {
 				double min_fold = segment.min_fold;
 				int min_terminal = -segment.min_terminal;
 				int confidence_interval = 0;
-				IdentifyChangePoints.identifyNegativeBinomialChangePointsInLongSegments(sfr, spliced_exon_gtf, intronic_exon_gtf, changepoint_writer, minLength, maxBins, binSize, minCP, strandedness, alpha_0, beta_0, nb_r, r, p, internal, min_fold, min_terminal, confidence_interval);
+				IdentifyChangePoints.identifyNegativeBinomialChangePointsInLongSegments(sfr, spliced_exon_gtf, intronic_exon_gtf, changepoint_writer, minLength, maxBins, binSize, minCP, strandedness, alpha_0, beta_0, nb_r, r, p, internal, min_fold, min_terminal);
 				changepoint_writer.close();
 
 				System.out.println("filtering change points");
@@ -611,8 +610,7 @@ public class IsoSCM {
 			int r=assemblyConfiguration1.segment_r;
 			double p=assemblyConfiguration1.segment_p;
 			double min_fold=assemblyConfiguration1.min_fold;
-			int confidence_interval = assemblyConfiguration1.c;
-			JointSegmentation.performJointSegmentation(assemblyConfiguration1.base, assemblyConfiguration2.base, spliced_exon_gtf1, spliced_exon_gtf2, assemblyConfiguration1.bam, assemblyConfiguration2.bam, table, gtf,s1,s2, maxBins, binSize, minCP, alpha_0, beta_0, nb_r, r, p, min_fold, confidence_interval);
+			JointSegmentation.performJointSegmentation(assemblyConfiguration1.base, assemblyConfiguration2.base, spliced_exon_gtf1, spliced_exon_gtf2, assemblyConfiguration1.bam, assemblyConfiguration2.bam, table, gtf,s1,s2, maxBins, binSize, minCP, alpha_0, beta_0, nb_r, r, p, min_fold);
 
 			logger.info("compare comleted.");
 		}

@@ -155,7 +155,7 @@ public class JointSegmentation {
 		return maxCommonExon;
 	}
 
-	public static void performJointSegmentation(String id1, String id2, File spliced_exons1, File spliced_exons2, File bam1, File bam2, File table, File gtf, Strandedness strandedness1, Strandedness strandedness2, int maxBins, int binSize, int minCP, double alpha_0, double beta_0, int nb_r, int r, double p, double min_fold, int confidence_interval) throws FileNotFoundException {
+	public static void performJointSegmentation(String id1, String id2, File spliced_exons1, File spliced_exons2, File bam1, File bam2, File table, File gtf, Strandedness strandedness1, Strandedness strandedness2, int maxBins, int binSize, int minCP, double alpha_0, double beta_0, int nb_r, int r, double p, double min_fold) throws FileNotFoundException {
 
 		StrandedGenomicIntervalTree<Map<String,Object>> exons1 = IntervalTools.buildRegionsTree(new TranscriptIterator(spliced_exons1), true, true, true);
 		StrandedGenomicIntervalTree<Map<String,Object>> exons2 = IntervalTools.buildRegionsTree(new TranscriptIterator(spliced_exons2), true, true, true);
@@ -195,7 +195,7 @@ public class JointSegmentation {
 		
 			boolean constrained_decreasing = !u.isNegativeStrand();
 			
-			List<ChangePoint> changepoints = IdentifyChangePoints.identifyConstrainedNegativeBinomialPoints(ids,sfrs,strandednesses, u.chr, u.start, u.end, maxBins, binSize, minCP, u.isNegativeStrand(), alpha_0, beta_0, nb_r, r, p, constrained_decreasing, min_fold, confidence_interval);
+			List<ChangePoint> changepoints = IdentifyChangePoints.identifyConstrainedNegativeBinomialPoints(ids,sfrs,strandednesses, u.chr, u.start, u.end, maxBins, binSize, minCP, u.isNegativeStrand(), alpha_0, beta_0, nb_r, r, p, constrained_decreasing, min_fold);
 
 			// write the union exon
 			for(ChangePoint cp : changepoints){

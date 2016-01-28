@@ -32,4 +32,10 @@ public class ConfidenceCalculator {
 		double log_odds = Math.exp(0-log_probility)-1 <=0 ? Double.POSITIVE_INFINITY : log_probility - Util.logSubtract(0, log_probility); 
 		return new ConfidenceResult(log_probility, log_odds);
 	}
+	
+	public ConfidenceResult calculateConfidence(int p){
+		double log_probility = likelihoods.get(p)-log_q_suffix[0];
+		double log_odds = Math.exp(0-log_probility)-1 <=0 ? Double.POSITIVE_INFINITY : log_probility - Util.logSubtract(0, log_probility); 
+		return new ConfidenceResult(log_probility, log_odds);
+	}
 }

@@ -178,7 +178,7 @@ public class IdentifyChangePoints {
 		return changePoints;
 	}
 
-	public static void identifyConstrainedNegativeBinomialPoints(SAMFileReader sfr, String chr, int start, int end, int maxBins, int binSize, int minCP, Strandedness strandedness, boolean isNegativeStrand, double alpha_0, double beta_0, int nb_r, int r, double p, boolean constrain_decreasing, double min_fold, int confidence_interval, GTFWriter gw){
+	public static void identifyConstrainedNegativeBinomialPoints(SAMFileReader sfr, String chr, int start, int end, int maxBins, int binSize, int minCP, Strandedness strandedness, boolean isNegativeStrand, double alpha_0, double beta_0, int nb_r, int r, double p, boolean constrain_decreasing, double min_fold, GTFWriter gw){
 
 
 		int l = end-start+1;
@@ -242,7 +242,7 @@ public class IdentifyChangePoints {
 						attributes.put("before_mle", segment_mle[i]);
 						attributes.put("after_mle", segment_mle[i+1]);
 						attributes.put("type","changepoint");
-						ConfidenceResult cr = cc.calculateConfidence(Math.max(changepoint_i-confidence_interval,0), Math.min(changepoint_i+1+confidence_interval,prefix_suffix.l-2));
+						ConfidenceResult cr = cc.calculateConfidence(changepoints[i]);
 						attributes.put("confidence",Util.sprintf("%.3e", Math.exp(cr.log_confidence)));
 						attributes.put("log_odds",Util.sprintf("%.3e", cr.log_odds));
 
@@ -322,7 +322,7 @@ public class IdentifyChangePoints {
 		}
 	}
 
-	public static List<ChangePoint> identifyConstrainedNegativeBinomialPoints(String[] ids, SAMFileReader[] sfrs, Strandedness[] strandednesses, String chr, int start, int end, int maxBins, int binSize, int minCP, boolean isNegativeStrand, double alpha_0, double beta_0, int nb_r, int r, double p, boolean constrain_decreasing, double min_fold, int confidence_interval){
+	public static List<ChangePoint> identifyConstrainedNegativeBinomialPoints(String[] ids, SAMFileReader[] sfrs, Strandedness[] strandednesses, String chr, int start, int end, int maxBins, int binSize, int minCP, boolean isNegativeStrand, double alpha_0, double beta_0, int nb_r, int r, double p, boolean constrain_decreasing, double min_fold){
 
 
 		int l = end-start+1;
@@ -390,9 +390,8 @@ public class IdentifyChangePoints {
 						positions.add(position);
 						
 						before_mles.add(segment_mle[i]);
-						after_mles.add(segment_mle[i+1]);
-						
-						ConfidenceResult cr = cc.calculateConfidence(Math.max(changepoint_i-confidence_interval,0), Math.min(changepoint_i+1+confidence_interval,prefix_suffix.l-2));
+						after_mles.add(segment_mle[i+1]);						
+						ConfidenceResult cr = cc.calculateConfidence(changepoints[i]);
 						confidences.add(Math.exp(cr.log_confidence));
 						l_odds.add(cr.log_odds);
 
@@ -423,7 +422,7 @@ public class IdentifyChangePoints {
 		return changePoints;
 	}
 
-	public static void identifyUnconstrainedNegativeBinomialPoints(SAMFileReader sfr, String chr, int start, int end, int maxBins, int binSize, int minCP, Strandedness strandedness, boolean isNegativeStrand, double alpha_0, double beta_0, int nb_r, int r, double p, double min_fold, int confidence_interval, GTFWriter gw){
+	public static void identifyUnconstrainedNegativeBinomialPoints(SAMFileReader sfr, String chr, int start, int end, int maxBins, int binSize, int minCP, Strandedness strandedness, boolean isNegativeStrand, double alpha_0, double beta_0, int nb_r, int r, double p, double min_fold, GTFWriter gw){
 
 		int l = end-start+1;
 
@@ -477,9 +476,8 @@ public class IdentifyChangePoints {
 						Map<String,Object> attributes = new HashMap<String, Object>();
 						attributes.put("before_mle", segment_mle[i]);
 						attributes.put("after_mle", segment_mle[i+1]);
-						attributes.put("type","changepoint");
-						
-						ConfidenceResult cr = cc.calculateConfidence(Math.max(changepoint_i-confidence_interval,0), Math.min(changepoint_i+1+confidence_interval,prefix_suffix.l-2));
+						attributes.put("type","changepoint");						
+						ConfidenceResult cr = cc.calculateConfidence(changepoints[i]);
 						attributes.put("confidence",Util.sprintf("%.3e", Math.exp(cr.log_confidence)));
 						attributes.put("log_odds",Util.sprintf("%.3e", cr.log_odds));
 
@@ -625,7 +623,7 @@ public class IdentifyChangePoints {
 	}
 	*/
 
-	public static void identifyNegativeBinomialChangePointsInLongSegments(SAMFileReader sfr, File spliced_exon_gtf, File intronic_exon_gtf, GTFWriter changepointWriter, int minLength, int maxBins, int binSize, int minCP, Strandedness strandedness, double alpha_0, double beta_0, int nb_r, int r, double p, boolean internal, double min_fold, int min_terminal, int confidence_interval) throws FileNotFoundException{
+	public static void identifyNegativeBinomialChangePointsInLongSegments(SAMFileReader sfr, File spliced_exon_gtf, File intronic_exon_gtf, GTFWriter changepointWriter, int minLength, int maxBins, int binSize, int minCP, Strandedness strandedness, double alpha_0, double beta_0, int nb_r, int r, double p, boolean internal, double min_fold, int min_terminal) throws FileNotFoundException{
 		StrandedGenomicIntervalTree<Map<String, Object>> continuousSegments = new StrandedGenomicIntervalTree<Map<String,Object>>();
 		StrandedGenomicIntervalTree<Map<String, Object>> exons = new StrandedGenomicIntervalTree<Map<String,Object>>();
 
@@ -652,17 +650,17 @@ public class IdentifyChangePoints {
 				if(annotations.size()==1){
 					String type = annotations.iterator().next();
 					if(internal && "internal_exon".equals(type)){
-						identifyUnconstrainedNegativeBinomialPoints(sfr, segment.chr, segment.start, segment.end, maxBins, binSize, minCP, strandedness, segment.isNegativeStrand(), alpha_0, beta_0, nb_r, r, p, min_fold, confidence_interval, changepointWriter);
+						identifyUnconstrainedNegativeBinomialPoints(sfr, segment.chr, segment.start, segment.end, maxBins, binSize, minCP, strandedness, segment.isNegativeStrand(), alpha_0, beta_0, nb_r, r, p, min_fold, changepointWriter);
 					}
 					else if("5p_exon".equals(type)){
 						boolean constrained_decreasing = segment.isNegativeStrand();
 						int[] i = IntervalTools.offsetInterval(segment.start, segment.end, -min_terminal, 0, segment.isNegativeStrand());
-						identifyConstrainedNegativeBinomialPoints(sfr, segment.chr, i[0], i[1], maxBins, binSize, minCP, strandedness, segment.isNegativeStrand(), alpha_0, beta_0, nb_r, r, p, constrained_decreasing, min_fold, confidence_interval, changepointWriter);
+						identifyConstrainedNegativeBinomialPoints(sfr, segment.chr, i[0], i[1], maxBins, binSize, minCP, strandedness, segment.isNegativeStrand(), alpha_0, beta_0, nb_r, r, p, constrained_decreasing, min_fold, changepointWriter);
 					}
 					else if("3p_exon".equals(type)){
 						boolean constrained_decreasing = !segment.isNegativeStrand();
 						int[] i = IntervalTools.offsetInterval(segment.start, segment.end, 0, -min_terminal, segment.isNegativeStrand());
-						identifyConstrainedNegativeBinomialPoints(sfr, segment.chr, i[0], i[1], maxBins, binSize, minCP, strandedness, segment.isNegativeStrand(), alpha_0, beta_0, nb_r, r, p, constrained_decreasing, min_fold, confidence_interval, changepointWriter);
+						identifyConstrainedNegativeBinomialPoints(sfr, segment.chr, i[0], i[1], maxBins, binSize, minCP, strandedness, segment.isNegativeStrand(), alpha_0, beta_0, nb_r, r, p, constrained_decreasing, min_fold, changepointWriter);
 					}
 				}
 			}
