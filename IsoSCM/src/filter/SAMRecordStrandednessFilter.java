@@ -1,6 +1,6 @@
 package filter;
 
-import net.sf.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecord;
 import tools.Strandedness;
 
 public class SAMRecordStrandednessFilter extends ComposableFilter<SAMRecord>{

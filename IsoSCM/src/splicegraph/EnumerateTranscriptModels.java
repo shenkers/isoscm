@@ -13,12 +13,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
-import net.sf.samtools.Cigar;
-import net.sf.samtools.CigarElement;
-import net.sf.samtools.CigarOperator;
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.SAMRecordIterator;
+import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordIterator;
 import processing.FindSpliceJunctions;
 import tools.AnnotatedRegion;
 import tools.BEDTools.BEDWriter;
@@ -47,7 +48,7 @@ public class EnumerateTranscriptModels {
 		bw.close();
 	}
 
-	public static void filterJunctions(SAMFileReader sfr, String chr, int start, int end, String junctionBed) throws FileNotFoundException{
+	public static void filterJunctions(SamReader sfr, String chr, int start, int end, String junctionBed) throws FileNotFoundException{
 		List<AnnotatedRegion> junctions = FindSpliceJunctions.spliceJunction(sfr, chr, start, end, true);
 
 		BEDWriter bw = new BEDWriter(junctionBed);
@@ -88,7 +89,7 @@ public class EnumerateTranscriptModels {
 	//	}
 	//	}
 
-	public static double fraction_using_jnct(SAMFileReader sfr, String chr, int start, int end){
+	public static double fraction_using_jnct(SamReader sfr, String chr, int start, int end){
 		SAMRecordIterator sri = sfr.query(chr, start, start, false);
 		Set<String> splice_junction_reads = new HashSet<String>();
 		Set<String> non_splice_junction_reads = new HashSet<String>();
@@ -286,7 +287,7 @@ public class EnumerateTranscriptModels {
 		//		chr1:192,805,797-192,858,788
 
 		//		intervals("test3.gtf");
-		SAMFileReader sfr = new SAMFileReader(new File("/home/sol/data/sangercenter/hippocampus.bam"));
+		SamReader sfr = SamReaderFactory.makeDefault().open(new File("/home/sol/data/sangercenter/hippocampus.bam"));
 
 		//		filterRegion("chr1", 192805797, 192858788);
 		//		filterJunctions(sfr,"chr1", 192805797, 192858788);
@@ -394,7 +395,7 @@ public class EnumerateTranscriptModels {
 		//		chr1:192,805,797-192,858,788
 
 		//		intervals("test3.gtf");
-		SAMFileReader sfr = new SAMFileReader(new File("/home/sol/data/sangercenter/hippocampus.bam"));
+		SamReader sfr = SamReaderFactory.makeDefault().open(new File("/home/sol/data/sangercenter/hippocampus.bam"));
 
 		filterRegion(chr, start, end, segmentationBed);
 		filterJunctions(sfr,chr, start, end, junctionBed);

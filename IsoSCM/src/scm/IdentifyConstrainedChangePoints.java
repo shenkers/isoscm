@@ -6,7 +6,7 @@ import java.util.List;
 
 import multisample.JointSegmentationResult;
 
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.math3.distribution.ExponentialDistribution;
 import org.apache.commons.math3.special.Beta;
 import org.apache.commons.math3.special.Gamma;

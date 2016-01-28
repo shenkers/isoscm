@@ -17,12 +17,13 @@ import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.TreeMap;
 
-import net.sf.samtools.Cigar;
-import net.sf.samtools.CigarElement;
-import net.sf.samtools.CigarOperator;
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.SAMRecordIterator;
+import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordIterator;
 
 import org.apache.commons.math3.special.Beta;
 
@@ -49,7 +50,7 @@ import filter.SAMRecordStrandednessFilter;
 
 public class FindSpliceJunctions {
 
-	public static List<AnnotatedRegion> spliceJunction(SAMFileReader sfr, String chr, int start, int end, boolean contained){
+	public static List<AnnotatedRegion> spliceJunction(SamReader sfr, String chr, int start, int end, boolean contained){
 		SAMRecordIterator sri = sfr.query(chr, start, end, contained);
 		List<AnnotatedRegion> splice_junctions = new LinkedList<AnnotatedRegion>();
 
@@ -114,7 +115,7 @@ public class FindSpliceJunctions {
 		return splice_junctions;
 	}
 
-	public static StrandedGenomicIntervalTree<Map<String,Object>> tabulateSpliceJunctions(SAMFileReader sfr, Strandedness strandedness, BEDWriter bw){
+	public static StrandedGenomicIntervalTree<Map<String,Object>> tabulateSpliceJunctions(SamReader sfr, Strandedness strandedness, BEDWriter bw){
 		Map<String,Integer> referenceLengths = BAMTools.referenceSequenceLengths(sfr.getFileHeader());
 
 		StrandedGenomicIntervalTree<Map<String,Object>> splice_junctions = new StrandedGenomicIntervalTree<Map<String,Object>>();
@@ -180,7 +181,7 @@ public class FindSpliceJunctions {
 	 * @param bw
 	 * @throws FileNotFoundException
 	 */
-	public static void filterSpliceJunctions(SAMFileReader sfr, Strandedness strandedness, File splice_junction_bed, int w, double d, BEDWriter bw) throws FileNotFoundException{
+	public static void filterSpliceJunctions(SamReader sfr, Strandedness strandedness, File splice_junction_bed, int w, double d, BEDWriter bw) throws FileNotFoundException{
 		BEDIterator sj = new BEDIterator(splice_junction_bed);
 
 		StrandedGenomicIntervalTree<Map<String,Object>> splice_junctions = IntervalTools.buildRegionsTree(sj, true, false);
@@ -320,7 +321,7 @@ public class FindSpliceJunctions {
 			//						ss.addListener(e);
 		}
 
-		public void evaluate(SAMFileReader sfr, String chr, int position, boolean isNegativeStrand, boolean is5p){
+		public void evaluate(SamReader sfr, String chr, int position, boolean isNegativeStrand, boolean is5p){
 			reset();
 
 			int i=is5p^isNegativeStrand ? 1 : 0;
@@ -394,7 +395,7 @@ public class FindSpliceJunctions {
 			consumingIntron.append(countIntron);
 		}
 
-		public void evaluate(SAMFileReader sfr, String chr, int position, boolean isNegativeStrand, boolean is5p){
+		public void evaluate(SamReader sfr, String chr, int position, boolean isNegativeStrand, boolean is5p){
 			reset();
 
 			int[] exon = is5p ? IntervalTools.offsetInterval(position, w, -1, isNegativeStrand) : IntervalTools.offsetInterval(position, -1, w, isNegativeStrand);
@@ -434,7 +435,7 @@ public class FindSpliceJunctions {
 		}
 	}
 
-	public static void tFilterSpliceJunctions(SAMFileReader sfr, Strandedness strandedness, File splice_junction_bed, int w, double alpha, GTFWriter gw) throws FileNotFoundException{
+	public static void tFilterSpliceJunctions(SamReader sfr, Strandedness strandedness, File splice_junction_bed, int w, double alpha, GTFWriter gw) throws FileNotFoundException{
 		BEDIterator sj = new BEDIterator(splice_junction_bed);
 
 		StrandedGenomicIntervalTree<Map<String,Object>> splice_junctions = IntervalTools.buildRegionsTree(sj, true, false);
@@ -808,7 +809,7 @@ public class FindSpliceJunctions {
 		}
 	}
 
-	//	public static void countJunctionSupportingReads(SAMFileReader sfr, File splice_junction_bed, GTFWriter gw) throws FileNotFoundException{	
+	//	public static void countJunctionSupportingReads(SamReader sfr, File splice_junction_bed, GTFWriter gw) throws FileNotFoundException{	
 	//		StrandedGenomicIntervalTree<Map<String,Object>> jncts = IntervalTools.buildRegionsTree(new BEDIterator(splice_junction_bed), true, false);
 	//		StrandedGenomicIntervalTree<Map<String,Object>> j5p = IntervalTools.buildAttributedTerminiTree(jncts, true, true);
 	//		StrandedGenomicIntervalTree<Map<String,Object>> j3p = IntervalTools.buildAttributedTerminiTree(jncts, false, true);
@@ -850,7 +851,7 @@ public class FindSpliceJunctions {
 
 	
 
-	public static void countJunctionSupportingReads(SAMFileReader sfr, Strandedness strandedness, GTFWriter gw) throws FileNotFoundException{	
+	public static void countJunctionSupportingReads(SamReader sfr, Strandedness strandedness, GTFWriter gw) throws FileNotFoundException{	
 
 		Instantiator<MapCounter<Integer>> i = new Instantiator<MapCounter<Integer>>() {
 			public MapCounter<Integer> instantiate(Object... objects) {
@@ -1160,7 +1161,7 @@ public class FindSpliceJunctions {
 		}
 	}
 
-	public static void evaluateSpliceSupport(SAMFileReader sfr, Strandedness strandedness, File splice_junction_bed, int w, GTFWriter gw) throws FileNotFoundException{
+	public static void evaluateSpliceSupport(SamReader sfr, Strandedness strandedness, File splice_junction_bed, int w, GTFWriter gw) throws FileNotFoundException{
 		BEDIterator sj = new BEDIterator(splice_junction_bed);
 
 		StrandedGenomicIntervalTree<Map<String,Object>> splice_junctions = IntervalTools.buildRegionsTree(sj, true, false);
@@ -1204,7 +1205,7 @@ public class FindSpliceJunctions {
 		}
 	}
 
-	public static StrandedGenomicIntervalTree<Map<String,Object>> tabulateReplicateSpliceJunctions(SAMFileReader[] sfrs, BEDWriter bw){
+	public static StrandedGenomicIntervalTree<Map<String,Object>> tabulateReplicateSpliceJunctions(SamReader[] sfrs, BEDWriter bw){
 		Map<String,Integer> referenceLengths = BAMTools.referenceSequenceLengths(sfrs[0].getFileHeader());
 
 		StrandedGenomicIntervalTree<Map<String,Object>> splice_junctions = new StrandedGenomicIntervalTree<Map<String,Object>>();
@@ -1214,7 +1215,7 @@ public class FindSpliceJunctions {
 			int end = referenceLengths.get(chr);
 			boolean contained = true;
 
-			for(SAMFileReader sfr : sfrs){
+			for(SamReader sfr : sfrs){
 				SAMRecordIterator sri = sfr.query(chr, start, end, contained);
 				//		List<AnnotatedRegion> splice_junctions = new LinkedList<AnnotatedRegion>();
 				while(sri.hasNext()){
@@ -1423,13 +1424,13 @@ public class FindSpliceJunctions {
 
 
 		if(true){
-			SAMFileReader sfr = new SAMFileReader(new File("/home/sol/lailab/sol/SRP017778/merged/SRR645855.bam"));
+			SamReader sfr = SamReaderFactory.makeDefault().open(new File("/home/sol/lailab/sol/SRP017778/merged/SRR645855.bam"));
 			System.out.println(BAMTools.totalAlignedReads(sfr));
 			//			countJunctionSupportingReads(sfr, new File("/mnt/LaiLab/sol/GSE51572/test/isoscm/tmp/g.sj.bed"), new GTFWriter("/mnt/LaiLab/sol/GSE51572/test/g1.counts.gtf"));
 			countJunctionSupportingReads(sfr, Strandedness.unstranded, new GTFWriter(System.out));
 		}
 		if(false){
-			SAMFileReader sfr = new SAMFileReader(new File("/home/sol/lailab/sol/GSE41637/mapped/indexed/SRR594393.bam"));
+			SamReader sfr = SamReaderFactory.makeDefault().open(new File("/home/sol/lailab/sol/GSE41637/mapped/indexed/SRR594393.bam"));
 			File splice_junction_bed = new File("/home/sol/lailab/sol/GSE41637/nb/gtf/tmp/SRR594393.sj.bed");
 			//			GTFWriter gw = new GTFWriter("/dev/stdout");
 			//			tFilterSpliceJunctions(sfr, Strandedness.reverse_forward, splice_junction_bed, 50, .05, gw);
@@ -1444,7 +1445,7 @@ public class FindSpliceJunctions {
 		if(false)
 		{
 			SpliceSupportEvaluater sse = new SpliceSupportEvaluater(Strandedness.reverse_forward, 5);
-			SAMFileReader sfr = new SAMFileReader(new File("/home/sol/lailab/sol/piero/Project_3949/mapped/YH.bam"));
+			SamReader sfr = SamReaderFactory.makeDefault().open(new File("/home/sol/lailab/sol/piero/Project_3949/mapped/YH.bam"));
 			sse.evaluate(sfr, "v2_chr3L_random_348", 6028, true, false);
 			System.out.println(sse.countExon.n);
 			System.out.println(sse.countSpanning.n);
@@ -1457,10 +1458,10 @@ public class FindSpliceJunctions {
 		}
 		if(false)
 		{
-			//			SAMFileReader sfr = new SAMFileReader(new File("/home/sol/lailab/sol/GSE41637/mapped/indexed/SRR594393.bam"));
+			//			SamReader sfr = SamReaderFactory.makeDefault().open(new File("/home/sol/lailab/sol/GSE41637/mapped/indexed/SRR594393.bam"));
 			//			File splice_junction_bed = new File("/home/sol/workspace/IsoSCM/tests/gtf/tmp/SRR594393.sj.bed");
 			//			BEDWriter bw = new BEDWriter("/home/sol/workspace/IsoSCM/tests/gtf/tmp/SRR594393.sj.filtered.bed");
-			SAMFileReader sfr = new SAMFileReader(new File("/home/sol/workspace/IsoSCM/tests/enah.brain.bam"));
+			SamReader sfr = SamReaderFactory.makeDefault().open(new File("/home/sol/workspace/IsoSCM/tests/enah.brain.bam"));
 			File splice_junction_bed = new File("/home/sol/workspace/IsoSCM/tests/gtf/tmp/enah.sj.bed");
 			BEDWriter bw = new BEDWriter("/home/sol/workspace/IsoSCM/tests/gtf/tmp/enah.sj.filtered.bed");
 
@@ -1468,7 +1469,7 @@ public class FindSpliceJunctions {
 			bw.close();
 		}
 		if(false){
-			SAMFileReader sfr = new SAMFileReader(new File("/home/sol/data/sangercenter/hippocampus.bam"));
+			SamReader sfr = SamReaderFactory.makeDefault().open(new File("/home/sol/data/sangercenter/hippocampus.bam"));
 
 			//		spliceJunction(sfr, new BEDWriter(System.out));
 

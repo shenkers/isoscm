@@ -5,9 +5,9 @@
 			<PatternLayout pattern="%d{ISO8601} [%t] %-5level %logger{36} - %msg%n"/>
 		</Console>
 		<Routing name="LogRouter">
-			<Routes pattern="${ctx:log_file}">
+			<Routes pattern="isoscm-${ctx:log_date}.log">
 				<Route>
-					<RollingFile name="log_file" fileName="${ctx:log_file}" filePattern="${ctx:log_file}">
+					<RollingFile name="log_date" fileName="isoscm-${ctx:log_date}.log" filePattern="isoscm-${ctx:log_date}.log">
 						<PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
 					    <Policies>
 							<OnStartupTriggeringPolicy/>

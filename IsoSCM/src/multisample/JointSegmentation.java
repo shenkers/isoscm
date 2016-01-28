@@ -9,10 +9,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMFileReader.ValidationStringency;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.ValidationStringency;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -60,9 +61,9 @@ public class JointSegmentation {
 				id1,
 				id2
 		};
-		SAMFileReader[] sfrs = new SAMFileReader[]{
-				new SAMFileReader(new File(bam1)),
-				new SAMFileReader(new File(bam2)),
+		SamReader[] sfrs = new SamReader[]{
+				SamReaderFactory.makeDefault().open(new File(bam1)),
+				SamReaderFactory.makeDefault().open(new File(bam2)),
 		}; 
 
 		GTFWriter gw = new GTFWriter(outFile);
@@ -164,14 +165,14 @@ public class JointSegmentation {
 		StrandedGenomicIntervalTree<Map<String, Object>> maxCommonExons = getMaxCommonExons(exons1, exons2, strandedness1, strandedness2);
 		StrandedGenomicIntervalTree<Map<String, Object>> t5p = IntervalTools.buildTerminiTree(maxCommonExons, true, true, false);
 
-		SAMFileReader.setDefaultValidationStringency(ValidationStringency.SILENT);
+		SamReaderFactory.setDefaultValidationStringency(ValidationStringency.SILENT);
 		String[] ids = new String[]{
 				id1,
 				id2
 		};
-		SAMFileReader[] sfrs = new SAMFileReader[]{
-				new SAMFileReader(bam1),
-				new SAMFileReader(bam2),
+		SamReader[] sfrs = new SamReader[]{
+				SamReaderFactory.makeDefault().open(bam1),
+				SamReaderFactory.makeDefault().open(bam2),
 		};
 		Strandedness[] strandednesses = new Strandedness[]{
 				strandedness1,

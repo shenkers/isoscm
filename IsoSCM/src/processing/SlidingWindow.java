@@ -8,9 +8,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.SAMRecordIterator;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordIterator;
 import tools.AnnotatedRegion;
 import tools.BAMTools;
 import tools.BEDTools.BEDWriter;
@@ -35,7 +36,7 @@ public class SlidingWindow {
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
-	public static void identifyExpressed(SAMFileReader sfr, Strandedness strandedness, int positionsMeetingThreshold, int threshold, int w, BEDWriter bedWriter) throws FileNotFoundException, IOException{
+	public static void identifyExpressed(SamReader sfr, Strandedness strandedness, int positionsMeetingThreshold, int threshold, int w, BEDWriter bedWriter) throws FileNotFoundException, IOException{
 
 		//		String chr = "chr3";
 		//		int start = 144085495;
@@ -74,7 +75,7 @@ public class SlidingWindow {
 
 	}
 
-	public static void identifyChrExpressed(String chr, SAMFileReader sfr, Strandedness strandedness, int chunkSize, int w, int positionsMeetingThreshold, int threshold, StrandedGenomicIntervalSet satisfiedIntervals, BEDWriter bedWriter){
+	public static void identifyChrExpressed(String chr, SamReader sfr, Strandedness strandedness, int chunkSize, int w, int positionsMeetingThreshold, int threshold, StrandedGenomicIntervalSet satisfiedIntervals, BEDWriter bedWriter){
 
 		Map<String,Integer> refLengths = BAMTools.referenceSequenceLengths(sfr.getFileHeader());
 		int refLength = refLengths.get(chr);
@@ -300,7 +301,7 @@ public class SlidingWindow {
 
 	public static void main(String[] args) throws FileNotFoundException, IOException {
 		{
-		SAMFileReader sfr = new SAMFileReader(new File("/home/sol/lailab/sol/sangercenter/de_dup/hippocampus.bam"));
+		SamReader sfr = SamReaderFactory.makeDefault().open(new File("/home/sol/lailab/sol/sangercenter/de_dup/hippocampus.bam"));
 		BEDWriter bw = new BEDWriter("unstranded.bed");
 		StrandedGenomicIntervalSet satisfiedIntervals = new StrandedGenomicIntervalSet();
 		int threshold=1;
@@ -312,7 +313,7 @@ public class SlidingWindow {
 		}
 		
 		if(false){
-		SAMFileReader sfr = new SAMFileReader(new File("/mnt/LaiLab/sol/GSE41637/mapped/indexed/SRR594398.bam"));
+		SamReader sfr = SamReaderFactory.makeDefault().open(new File("/mnt/LaiLab/sol/GSE41637/mapped/indexed/SRR594398.bam"));
 		BEDWriter bw = new BEDWriter("/mnt/LaiLab/sol/GSE41637/isoscm/test.bed");
 		identifyExpressed(sfr, Strandedness.reverse_forward, 1, 1, 1, bw);
 		bw.close();

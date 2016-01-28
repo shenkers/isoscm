@@ -9,11 +9,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import net.sf.samtools.Cigar;
-import net.sf.samtools.CigarElement;
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.SAMRecordIterator;
+import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordIterator;
 
 import org.apache.commons.math3.distribution.NormalDistribution;
 
@@ -44,7 +44,7 @@ import filter.SAMRecordStrandednessFilter;
 
 public class ClusterExpressedSegments {
 
-	public static int nConsumingReads(SAMFileReader sfr, Strandedness strandedness, String chr, int start, int end, boolean contained, boolean isNegativeStrand){
+	public static int nConsumingReads(SamReader sfr, Strandedness strandedness, String chr, int start, int end, boolean contained, boolean isNegativeStrand){
 		SAMRecordIterator sri = sfr.query(chr, start, end, contained);
 		int n = 0;
 		while(sri.hasNext()){
@@ -461,7 +461,7 @@ public class ClusterExpressedSegments {
 		merged_segments.close();
 	}
 
-	public static void identifyIntronicExons(File segment_bed, File acc_jnct_gtf, File spliced_exon_gtf, SAMFileReader bam, Strandedness strandedness, GTFWriter intronic_exon_writer, int minExtensionLength, double minExtensionFraction) throws FileNotFoundException{
+	public static void identifyIntronicExons(File segment_bed, File acc_jnct_gtf, File spliced_exon_gtf, SamReader bam, Strandedness strandedness, GTFWriter intronic_exon_writer, int minExtensionLength, double minExtensionFraction) throws FileNotFoundException{
 
 		StrandedGenomicIntervalTree<Map<String, Object>> expressedSegments = readBedFileAsIntervalTree(segment_bed);
 		StrandedGenomicIntervalTree<Map<String, Object>> sj = IntervalTools.buildRegionsTree(new TranscriptIterator(acc_jnct_gtf), true, false);
@@ -546,7 +546,7 @@ public class ClusterExpressedSegments {
 	 * @param intronic_exon_writer
 	 * @throws FileNotFoundException
 	 */
-	public static void filterIntronicExons(SAMFileReader sfr, Strandedness strandedness, File spliced_exon_gtf, File intronic_exon_gtf, File splice_junction_bed, int w, double d, GTFWriter intronic_exon_writer) throws FileNotFoundException{
+	public static void filterIntronicExons(SamReader sfr, Strandedness strandedness, File spliced_exon_gtf, File intronic_exon_gtf, File splice_junction_bed, int w, double d, GTFWriter intronic_exon_writer) throws FileNotFoundException{
 		/*
 		 * TODO : this method is incomplete, do not use until it is revisited
 		 * 
@@ -682,7 +682,7 @@ public class ClusterExpressedSegments {
 			//						ss.addListener(e);
 		}
 
-		public void evaluate(SAMFileReader sfr, String chr, int position, boolean isNegativeStrand, boolean is5p){
+		public void evaluate(SamReader sfr, String chr, int position, boolean isNegativeStrand, boolean is5p){
 			reset();
 
 			int i=is5p^isNegativeStrand ? 1 : 0;
@@ -828,7 +828,7 @@ public class ClusterExpressedSegments {
 
 	 */
 
-	public static int estimateMateInsertSize(SAMFileReader sfr, Strandedness strandedness, File segment_bed, double quantile) throws FileNotFoundException{
+	public static int estimateMateInsertSize(SamReader sfr, Strandedness strandedness, File segment_bed, double quantile) throws FileNotFoundException{
 		BEDIterator ti = new BEDIterator(segment_bed);
 
 		NormalDistribution nd = new NormalDistribution(0, 1);
@@ -894,7 +894,7 @@ public class ClusterExpressedSegments {
 
 
 
-	public static void identifySpannableRegions(SAMFileReader sfr, Strandedness strandedness, BEDWriter matepair_bw, int max_insert_size) throws FileNotFoundException{
+	public static void identifySpannableRegions(SamReader sfr, Strandedness strandedness, BEDWriter matepair_bw, int max_insert_size) throws FileNotFoundException{
 		StrandedGenomicIntervalSet mate_spanned_regions = new StrandedGenomicIntervalSet();
 
 		SAMRecordIterator sri = sfr.iterator();

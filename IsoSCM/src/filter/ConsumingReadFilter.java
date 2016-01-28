@@ -1,8 +1,8 @@
 package filter;
 
-import net.sf.samtools.Cigar;
-import net.sf.samtools.CigarElement;
-import net.sf.samtools.SAMRecord;
+import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.SAMRecord;
 
 public class ConsumingReadFilter extends ComposableFilter<SAMRecord> {
 

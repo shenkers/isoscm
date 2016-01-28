@@ -16,7 +16,8 @@ import java.util.Map;
 import java.util.Set;
 
 import multisample.JointSegmentationResult;
-import net.sf.samtools.SAMFileReader;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 
 import org.apache.commons.math3.special.Beta;
 import org.apache.logging.log4j.LogManager;
@@ -39,7 +40,7 @@ public class IdentifyChangePoints {
 
 	private static final Logger logger = LogManager.getLogger();
 
-	public static StrandedGenomicIntervalTree<Map<String, Object>> identifyUnconstrainedNegativeBinomialPoints(SAMFileReader sfr, String chr, int start, int end, int maxBins, int binSize, int minCP, Strandedness strandedness, boolean isNegativeStrand, double alpha_0, double beta_0, int nb_r, int r, double p, double min_fold){
+	public static StrandedGenomicIntervalTree<Map<String, Object>> identifyUnconstrainedNegativeBinomialPoints(SamReader sfr, String chr, int start, int end, int maxBins, int binSize, int minCP, Strandedness strandedness, boolean isNegativeStrand, double alpha_0, double beta_0, int nb_r, int r, double p, double min_fold){
 
 		int l = end-start+1;
 
@@ -106,7 +107,7 @@ public class IdentifyChangePoints {
 		return gw;
 	}
 
-	public static StrandedGenomicIntervalTree<Map<String, Object>> identifyConstrainedNegativeBinomialPoints(SAMFileReader sfr, String chr, int start, int end, int maxBins, int binSize, int minCP, Strandedness strandedness, boolean isNegativeStrand, double alpha_0, double beta_0, int nb_r, int r, double p, boolean constrain_decreasing, double min_fold){
+	public static StrandedGenomicIntervalTree<Map<String, Object>> identifyConstrainedNegativeBinomialPoints(SamReader sfr, String chr, int start, int end, int maxBins, int binSize, int minCP, Strandedness strandedness, boolean isNegativeStrand, double alpha_0, double beta_0, int nb_r, int r, double p, boolean constrain_decreasing, double min_fold){
 
 
 		int l = end-start+1;
@@ -178,7 +179,7 @@ public class IdentifyChangePoints {
 		return changePoints;
 	}
 
-	public static void identifyConstrainedNegativeBinomialPoints(SAMFileReader sfr, String chr, int start, int end, int maxBins, int binSize, int minCP, Strandedness strandedness, boolean isNegativeStrand, double alpha_0, double beta_0, int nb_r, int r, double p, boolean constrain_decreasing, double min_fold, GTFWriter gw){
+	public static void identifyConstrainedNegativeBinomialPoints(SamReader sfr, String chr, int start, int end, int maxBins, int binSize, int minCP, Strandedness strandedness, boolean isNegativeStrand, double alpha_0, double beta_0, int nb_r, int r, double p, boolean constrain_decreasing, double min_fold, GTFWriter gw){
 
 
 		int l = end-start+1;
@@ -255,7 +256,7 @@ public class IdentifyChangePoints {
 		}
 	}
 
-	public static void identifyAConstrainedNegativeBinomialPoints(SAMFileReader sfr, String chr, int start, int end, int maxBins, int binSize, int minCP, Strandedness strandedness, boolean isNegativeStrand, double alpha_0, double beta_0, int nb_r, int r, double p, double min_fold, GTFWriter gw){
+	public static void identifyAConstrainedNegativeBinomialPoints(SamReader sfr, String chr, int start, int end, int maxBins, int binSize, int minCP, Strandedness strandedness, boolean isNegativeStrand, double alpha_0, double beta_0, int nb_r, int r, double p, double min_fold, GTFWriter gw){
 
 
 		int l = end-start+1;
@@ -322,7 +323,7 @@ public class IdentifyChangePoints {
 		}
 	}
 
-	public static List<ChangePoint> identifyConstrainedNegativeBinomialPoints(String[] ids, SAMFileReader[] sfrs, Strandedness[] strandednesses, String chr, int start, int end, int maxBins, int binSize, int minCP, boolean isNegativeStrand, double alpha_0, double beta_0, int nb_r, int r, double p, boolean constrain_decreasing, double min_fold){
+	public static List<ChangePoint> identifyConstrainedNegativeBinomialPoints(String[] ids, SamReader[] sfrs, Strandedness[] strandednesses, String chr, int start, int end, int maxBins, int binSize, int minCP, boolean isNegativeStrand, double alpha_0, double beta_0, int nb_r, int r, double p, boolean constrain_decreasing, double min_fold){
 
 
 		int l = end-start+1;
@@ -422,7 +423,7 @@ public class IdentifyChangePoints {
 		return changePoints;
 	}
 
-	public static void identifyUnconstrainedNegativeBinomialPoints(SAMFileReader sfr, String chr, int start, int end, int maxBins, int binSize, int minCP, Strandedness strandedness, boolean isNegativeStrand, double alpha_0, double beta_0, int nb_r, int r, double p, double min_fold, GTFWriter gw){
+	public static void identifyUnconstrainedNegativeBinomialPoints(SamReader sfr, String chr, int start, int end, int maxBins, int binSize, int minCP, Strandedness strandedness, boolean isNegativeStrand, double alpha_0, double beta_0, int nb_r, int r, double p, double min_fold, GTFWriter gw){
 
 		int l = end-start+1;
 
@@ -492,7 +493,7 @@ public class IdentifyChangePoints {
 
 	}
 
-	public static void calculate_spliced_coverage(SAMFileReader sfr, File assembly_gtf, Strandedness strandedness, GTFWriter coverage_gtf_writer) throws FileNotFoundException{
+	public static void calculate_spliced_coverage(SamReader sfr, File assembly_gtf, Strandedness strandedness, GTFWriter coverage_gtf_writer) throws FileNotFoundException{
 		StrandedGenomicIntervalTree<Map<String, Object>> continuousSegments = new StrandedGenomicIntervalTree<Map<String,Object>>();
 		StrandedGenomicIntervalTree<Map<String, Object>> exons = new StrandedGenomicIntervalTree<Map<String,Object>>();
 
@@ -555,7 +556,7 @@ public class IdentifyChangePoints {
 		// go through the exons, select the overlapping segments, attach the minimum coverage of any overlapping segment.
 	}
 
-	public static void calculate_coverage(SAMFileReader sfr, File unspliced_gtf, Strandedness strandedness, GTFWriter coverage_gtf_writer) throws FileNotFoundException{
+	public static void calculate_coverage(SamReader sfr, File unspliced_gtf, Strandedness strandedness, GTFWriter coverage_gtf_writer) throws FileNotFoundException{
 		//		StrandedGenomicIntervalTree<Map<String, Object>> continuousSegments = IntervalTools.buildRegionsTree(new TranscriptIterator(unspliced_gtf), true, true);
 		TranscriptIterator ti =new TranscriptIterator(unspliced_gtf);
 
@@ -623,7 +624,7 @@ public class IdentifyChangePoints {
 	}
 	*/
 
-	public static void identifyNegativeBinomialChangePointsInLongSegments(SAMFileReader sfr, File spliced_exon_gtf, File intronic_exon_gtf, GTFWriter changepointWriter, int minLength, int maxBins, int binSize, int minCP, Strandedness strandedness, double alpha_0, double beta_0, int nb_r, int r, double p, boolean internal, double min_fold, int min_terminal) throws FileNotFoundException{
+	public static void identifyNegativeBinomialChangePointsInLongSegments(SamReader sfr, File spliced_exon_gtf, File intronic_exon_gtf, GTFWriter changepointWriter, int minLength, int maxBins, int binSize, int minCP, Strandedness strandedness, double alpha_0, double beta_0, int nb_r, int r, double p, boolean internal, double min_fold, int min_terminal) throws FileNotFoundException{
 		StrandedGenomicIntervalTree<Map<String, Object>> continuousSegments = new StrandedGenomicIntervalTree<Map<String,Object>>();
 		StrandedGenomicIntervalTree<Map<String, Object>> exons = new StrandedGenomicIntervalTree<Map<String,Object>>();
 
@@ -667,7 +668,7 @@ public class IdentifyChangePoints {
 		}
 	}
 
-	public static void identifyNegativeBinomialChangePointsInUnsplicedSegments(SAMFileReader sfr, File unspliced_gtf, File spliced_gtf, GTFWriter changepointWriter, int minLength, int maxBins, int binSize, int minCP, Strandedness strandedness, double alpha_0, double beta_0, int nb_r, int r, double p, double min_fold, int min_terminal) throws FileNotFoundException{
+	public static void identifyNegativeBinomialChangePointsInUnsplicedSegments(SamReader sfr, File unspliced_gtf, File spliced_gtf, GTFWriter changepointWriter, int minLength, int maxBins, int binSize, int minCP, Strandedness strandedness, double alpha_0, double beta_0, int nb_r, int r, double p, double min_fold, int min_terminal) throws FileNotFoundException{
 
 		StrandedGenomicIntervalTree<Map<String,Object>> spliced_exon_boundaries = IntervalTools.buildTerminiTree(new TranscriptIterator(spliced_gtf),true,false);
 		TranscriptIterator ti = new TranscriptIterator(unspliced_gtf);
@@ -719,7 +720,7 @@ public class IdentifyChangePoints {
 
 		StrandedGenomicIntervalTree<Map<String,Object>> internal3p = IntervalTools.buildTerminiTree(internal, false, true, false);
 
-		SAMFileReader sfr = new SAMFileReader(new File("/home/sol/lailab/sol/GSE41637/mapped/indexed/SRR594393.bam"));
+		SamReader sfr = SamReaderFactory.makeDefault().open(new File("/home/sol/lailab/sol/GSE41637/mapped/indexed/SRR594393.bam"));
 		double alpha = .05;
 
 		for(AnnotatedRegion e : internal3p){
@@ -902,7 +903,7 @@ public class IdentifyChangePoints {
 
 		StrandedGenomicIntervalTree<Map<String,Object>> internal3p = IntervalTools.buildTerminiTree(internal, false, true, false);
 
-		SAMFileReader sfr = new SAMFileReader(new File("/home/sol/lailab/sol/GSE41637/mapped/indexed/SRR594393.bam"));
+		SamReader sfr = SamReaderFactory.makeDefault().open(new File("/home/sol/lailab/sol/GSE41637/mapped/indexed/SRR594393.bam"));
 
 		//		for(AnnotatedRegion e : internal3p.overlappingRegions("15", 83115385, 83119232, '+')){
 		for(AnnotatedRegion e : internal3p){
@@ -1026,7 +1027,7 @@ public class IdentifyChangePoints {
 
 	}
 
-	public static void filterChangePoints(SAMFileReader sfr, File spliced_exon_gtf, File intronic_exon_gtf, File acc_jnct_gtf, File changepoint_gtf, GTFWriter filtered_changepoint_writer, int sj_radius) throws FileNotFoundException{
+	public static void filterChangePoints(SamReader sfr, File spliced_exon_gtf, File intronic_exon_gtf, File acc_jnct_gtf, File changepoint_gtf, GTFWriter filtered_changepoint_writer, int sj_radius) throws FileNotFoundException{
 		StrandedGenomicIntervalTree<Map<String, Object>> continuousSegments = new StrandedGenomicIntervalTree<Map<String,Object>>();
 
 		TranscriptIterator bi = new TranscriptIterator(acc_jnct_gtf);
@@ -1217,7 +1218,7 @@ public class IdentifyChangePoints {
 //			System.exit(0);
 //		}
 		if(false){
-			SAMFileReader sfr = new SAMFileReader(new File("/home/sol/lailab/sol/GSE41637/mapped/indexed/SRR594393.bam"));
+			SamReader sfr = SamReaderFactory.makeDefault().open(new File("/home/sol/lailab/sol/GSE41637/mapped/indexed/SRR594393.bam"));
 			GTFWriter gw = new GTFWriter("/dev/stdout");
 			File unspliced_gtf = new File("/home/sol/lailab/sol/GSE41637/300n/SRR594393.unspliced.gtf");
 			File spliced_gtf = new File("/home/sol/lailab/sol/GSE41637/300n/tmp/SRR594393.exon.gtf");
@@ -1240,7 +1241,7 @@ public class IdentifyChangePoints {
 		}
 		
 		if(false){
-			SAMFileReader sfr = new SAMFileReader(new File("/mnt/LaiLab/sol/GSE41637/mapped/indexed/SRR594393.bam"));
+			SamReader sfr = SamReaderFactory.makeDefault().open(new File("/mnt/LaiLab/sol/GSE41637/mapped/indexed/SRR594393.bam"));
 			File unspliced_gtf = new File("/home/sol/lailab/sol/GSE41637/nb/gtf/SRR594393.remainder.gtf");
 			File assembly_gtf = new File("/home/sol/lailab/sol/GSE41637/nb/gtf/SRR594393.gtf");
 			GTFWriter fcw = new GTFWriter("/dev/stdout");
@@ -1249,7 +1250,7 @@ public class IdentifyChangePoints {
 			calculate_coverage(sfr, unspliced_gtf, Strandedness.reverse_forward, fcw);
 		}
 		if(false){
-			SAMFileReader sfr = new SAMFileReader(new File("/mnt/LaiLab/sol/GSE41637/mapped/indexed/SRR594393.bam"));
+			SamReader sfr = SamReaderFactory.makeDefault().open(new File("/mnt/LaiLab/sol/GSE41637/mapped/indexed/SRR594393.bam"));
 			File spliced_exon_gtf = new File("/home/sol/workspace/IsoSCM/tests/gtf/tmp/SRR594393.25.1.exon.gtf");
 			File intronic_exon_gtf = new File("/home/sol/workspace/IsoSCM/tests/gtf/tmp/SRR594393.25.1.intronic.gtf");
 			File changepoint_exon_gtf = new File("/home/sol/workspace/IsoSCM/tests/gtf/tmp/SRR594393.25.1.cp_exon.gtf");
@@ -1269,7 +1270,7 @@ public class IdentifyChangePoints {
 		}
 
 		if(false){
-			SAMFileReader sfr1 = new SAMFileReader(new File("/mnt/LaiLab/sol/GSE41637/mapped/indexed/SRR594393.bam"));
+			SamReader sfr1 = SamReaderFactory.makeDefault().open(new File("/mnt/LaiLab/sol/GSE41637/mapped/indexed/SRR594393.bam"));
 			File spliced_exon_gtf = new File("/home/sol/workspace/IsoSCM/tests/gtf/tmp/SRR594393.25.exon.gtf");
 			File sj_bed = new File("/home/sol/workspace/IsoSCM/tests/gtf/tmp/SRR594393.25.sj.bed");
 			File intronic_exon_gtf = new File("/home/sol/workspace/IsoSCM/tests/gtf/tmp/SRR594393.25.intronic.gtf");
@@ -1282,7 +1283,7 @@ public class IdentifyChangePoints {
 		}
 
 		if(false){
-			SAMFileReader sfr = new SAMFileReader(new File("/home/sol/lailab/sol/GSE41637/isoscm/bam/enah.brain.bam"));
+			SamReader sfr = SamReaderFactory.makeDefault().open(new File("/home/sol/lailab/sol/GSE41637/isoscm/bam/enah.brain.bam"));
 			double alpha = 1.5;
 			double beta = .05;
 			int r = 50; 

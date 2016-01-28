@@ -6,7 +6,7 @@ import java.util.List;
 
 import javax.swing.text.Utilities;
 
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.math3.special.Beta;
 import org.apache.commons.math3.special.Gamma;
 import org.apache.logging.log4j.LogManager;

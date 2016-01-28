@@ -10,16 +10,16 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import net.sf.samtools.Cigar;
-import net.sf.samtools.CigarElement;
-import net.sf.samtools.CigarOperator;
-import net.sf.samtools.SAMFileHeader;
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMFileWriter;
-import net.sf.samtools.SAMFileWriterFactory;
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.SAMRecordIterator;
-import net.sf.samtools.SAMSequenceRecord;
+import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SAMFileWriter;
+import htsjdk.samtools.SAMFileWriterFactory;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordIterator;
+import htsjdk.samtools.SAMSequenceRecord;
 import util.Util.ExtremeTracker;
 import filter.ComposableFilter;
 import filter.Counter;
@@ -174,7 +174,7 @@ public class BAMTools {
 		int l;
 		int[] cumulativeReads;
 
-		public CumulativeReadsInterval(SAMFileReader sfr, String chr, int start, int end, boolean contained){
+		public CumulativeReadsInterval(SamReader sfr, String chr, int start, int end, boolean contained){
 			cumulativeReads = new int[end-start+1];
 			l=cumulativeReads.length;
 			this.contained=contained;
@@ -211,7 +211,7 @@ public class BAMTools {
 	 * @param sfr
 	 * @return the number of aligned reads in the given archive
 	 */
-	public static int totalAlignedReads(SAMFileReader sfr){
+	public static int totalAlignedReads(SamReader sfr){
 		if(!sfr.hasIndex()){
 			throw new IllegalArgumentException("bam file must be indexed");
 		}
@@ -221,7 +221,7 @@ public class BAMTools {
 		int i=0;
 		SAMSequenceRecord ssr = sfh.getSequence(i);
 		while(ssr!=null){
-			aligned += sfr.getIndex().getMetaData(i).getAlignedRecordCount();
+			aligned += sfr.indexing().getIndex().getMetaData(i).getAlignedRecordCount();
 			i++;
 			ssr = sfh.getSequence(i);	
 		}
@@ -234,7 +234,7 @@ public class BAMTools {
 	 * @param sfr
 	 * @return the number of aligned reads in the given archive
 	 */
-	public static int totalUnmappedReads(SAMFileReader sfr){
+	public static int totalUnmappedReads(SamReader sfr){
 		if(!sfr.hasIndex()){
 			throw new IllegalArgumentException("bam file must be indexed");
 		}
@@ -250,17 +250,17 @@ public class BAMTools {
 		return aligned;
 	}
 
-	public static double FPKM(SAMFileReader sfr, AnnotatedRegion ar, boolean contained){
+	public static double FPKM(SamReader sfr, AnnotatedRegion ar, boolean contained){
 		return FPKM(sfr, ar.chr, ar.start, ar.end, contained,true);
 	}
 
-	public static double FPKM(SAMFileReader sfr, String chr, int start, int end, boolean contained){
+	public static double FPKM(SamReader sfr, String chr, int start, int end, boolean contained){
 		double nTotal = totalAlignedReads(sfr);
 		double nAligned = nAlignedReads(sfr, chr, start, end, contained);
 		return (nAligned*1000000.0*1000.0)/(nTotal*(end-start+1)*1.0);
 	}
 
-	public static double FPKM(SAMFileReader sfr, String chr, int start, int end, boolean contained, boolean consuming, boolean uniquelyMapping){
+	public static double FPKM(SamReader sfr, String chr, int start, int end, boolean contained, boolean consuming, boolean uniquelyMapping){
 		double nTotal = totalAlignedReads(sfr);
 		int nAligned = 0;
 		if(consuming)
@@ -270,7 +270,7 @@ public class BAMTools {
 		return (nAligned*1000000.0*1000.0)/(nTotal*(end-start+1)*1.0);
 	}
 
-	public static double FPKM(SAMFileReader sfr, String chr, int start, int end, boolean contained, boolean consuming){
+	public static double FPKM(SamReader sfr, String chr, int start, int end, boolean contained, boolean consuming){
 		double nTotal = totalAlignedReads(sfr);
 		int nAligned = 0;
 		if(consuming)
@@ -280,13 +280,13 @@ public class BAMTools {
 		return (nAligned*1000000.0*1000.0)/(nTotal*(end-start+1)*1.0);
 	}
 
-	public static boolean expressedAboveThreshold(SAMFileReader sfr, String chr, int start, int end, boolean contained, double threshold){
+	public static boolean expressedAboveThreshold(SamReader sfr, String chr, int start, int end, boolean contained, double threshold){
 		double nTotal = totalAlignedReads(sfr);
 		int minReads = (int) ((threshold * nTotal * (end-start+1))/(1000000*1000));
 		return moreThanNAlignedReads(sfr, chr, start, end, contained, minReads);
 	}
 
-	public static double FPKM(SAMFileReader sfr, List<AnnotatedRegion> exons, boolean contained) {
+	public static double FPKM(SamReader sfr, List<AnnotatedRegion> exons, boolean contained) {
 		int nTotal = totalAlignedReads(sfr);
 		int nAligned = 0;
 		int size=0;
@@ -297,7 +297,7 @@ public class BAMTools {
 		return (nAligned*1000000.0*1000)/(nTotal*1.0*size);
 	}
 
-	public static double FPKM(SAMFileReader sfr, List<AnnotatedRegion> exons, boolean contained, boolean isNegativeStrand) {
+	public static double FPKM(SamReader sfr, List<AnnotatedRegion> exons, boolean contained, boolean isNegativeStrand) {
 		int nTotal = totalAlignedReads(sfr);
 		int nAligned = 0;
 		int size=0;
@@ -308,7 +308,7 @@ public class BAMTools {
 		return (nAligned*1000000.0*1000)/(nTotal*1.0*size);
 	}
 
-	public static double FPKM(SAMFileReader sfr, List<AnnotatedRegion> exons, boolean contained, Strandedness strandedness, boolean isNegativeStrand) {
+	public static double FPKM(SamReader sfr, List<AnnotatedRegion> exons, boolean contained, Strandedness strandedness, boolean isNegativeStrand) {
 		int nTotal = totalAlignedReads(sfr);
 		int nAligned = 0;
 		int size=0;
@@ -319,7 +319,7 @@ public class BAMTools {
 		return (nAligned*1000000.0*1000)/(nTotal*1.0*size);
 	}
 
-	public static double FPKM(SAMFileReader sfr, AnnotatedRegion exon, Strandedness strandedness, boolean contained) {
+	public static double FPKM(SamReader sfr, AnnotatedRegion exon, Strandedness strandedness, boolean contained) {
 		int nTotal = totalAlignedReads(sfr);
 		int nAligned = 0;
 		int size=0;
@@ -330,7 +330,7 @@ public class BAMTools {
 		return (nAligned*1000000.0*1000)/(nTotal*1.0*size);
 	}
 
-	public static double FPKM(SAMFileReader sfr, String chr, int start, int end, boolean isNegativeStrand, boolean contained, Strandedness strandedness) {
+	public static double FPKM(SamReader sfr, String chr, int start, int end, boolean isNegativeStrand, boolean contained, Strandedness strandedness) {
 		int nTotal = totalAlignedReads(sfr);
 		int nAligned = 0;
 		int size=end-start+1;
@@ -413,7 +413,7 @@ public class BAMTools {
 		return dels;
 	}
 
-	public static int nAlignedSplicedReads(SAMFileReader sfr, String chr, int start, int end, boolean contained){
+	public static int nAlignedSplicedReads(SamReader sfr, String chr, int start, int end, boolean contained){
 		SAMRecordIterator sri = sfr.query(chr, start, end, contained);
 		int n = 0;
 		while(sri.hasNext()){
@@ -448,11 +448,11 @@ public class BAMTools {
 		return n;
 	}
 
-	public static int nConsumingReads(SAMFileReader sfr, String chr, int start, int end, boolean contained){
+	public static int nConsumingReads(SamReader sfr, String chr, int start, int end, boolean contained){
 		return nConsumingReads(sfr, chr, start, end, contained, false);
 	}
 
-	public static int nConsumingReads(SAMFileReader sfr, String chr, int start, int end, boolean contained, boolean unique){
+	public static int nConsumingReads(SamReader sfr, String chr, int start, int end, boolean contained, boolean unique){
 		SAMRecordIterator sri = sfr.query(chr, start, end, contained);
 		int n = 0;
 		while(sri.hasNext()){
@@ -497,7 +497,7 @@ public class BAMTools {
 		return n;
 	}
 
-	public static int nConsumingReads(SAMFileReader sfr, String chr, int start, int end, boolean contained, boolean unique, boolean isNegativeStrand){
+	public static int nConsumingReads(SamReader sfr, String chr, int start, int end, boolean contained, boolean unique, boolean isNegativeStrand){
 		SAMRecordIterator sri = sfr.query(chr, start, end, contained);
 		int n = 0;
 		while(sri.hasNext()){
@@ -545,7 +545,7 @@ public class BAMTools {
 		return n;
 	}
 
-	public static int nConsumingReads(SAMFileReader sfr, String chr, int start, int end, boolean contained, Strandedness strandedness, boolean isNegativeStrand, int threshold){
+	public static int nConsumingReads(SamReader sfr, String chr, int start, int end, boolean contained, Strandedness strandedness, boolean isNegativeStrand, int threshold){
 		SAMRecordIterator sri = sfr.query(chr, start, end, contained);
 		int n = 0;
 		while(sri.hasNext()){
@@ -571,7 +571,7 @@ public class BAMTools {
 		return n;
 	}
 
-	public static int[] nConsumingReads(SAMFileReader sfr, String chr, int start, int end, boolean contained, Strandedness strandedness, int threshold, int max_hits){
+	public static int[] nConsumingReads(SamReader sfr, String chr, int start, int end, boolean contained, Strandedness strandedness, int threshold, int max_hits){
 		SAMRecordIterator sri = sfr.query(chr, start, end, contained);
 		int[] n = null;
 		if(strandedness.equals(Strandedness.unstranded)){
@@ -617,7 +617,7 @@ public class BAMTools {
 		return n;
 	}
 
-	public static int[] nConsumingReads(SAMFileReader sfr, String chr, int start, int end, boolean contained, Strandedness strandedness, int max_hits){
+	public static int[] nConsumingReads(SamReader sfr, String chr, int start, int end, boolean contained, Strandedness strandedness, int max_hits){
 		SAMRecordIterator sri = sfr.query(chr, start, end, contained);
 		int[] n = null;
 		if(strandedness.equals(Strandedness.unstranded)){
@@ -653,7 +653,7 @@ public class BAMTools {
 		return n;
 	}
 
-	public static int nConsumingReads(SAMFileReader SAMReader, String chromosome, int start, int end, boolean contained, Strandedness strandedness, boolean isNegativeStrand){
+	public static int nConsumingReads(SamReader SAMReader, String chromosome, int start, int end, boolean contained, Strandedness strandedness, boolean isNegativeStrand){
 		SAMRecordIterator sri = SAMReader.query(chromosome, start, end, contained);
 
 		int n=0;
@@ -829,7 +829,7 @@ public class BAMTools {
 		}
 	}
 
-	public static int nTerminatingReads(SAMFileReader SAMReader, String chromosome, int pos, boolean end5p, Strandedness strandedness, boolean isNegativeStrand){
+	public static int nTerminatingReads(SamReader SAMReader, String chromosome, int pos, boolean end5p, Strandedness strandedness, boolean isNegativeStrand){
 		SAMRecordIterator sri = SAMReader.query(chromosome, pos, pos, false);
 
 		int n=0;
@@ -910,7 +910,7 @@ public class BAMTools {
 	 * @param isNegativeStrand
 	 * @return
 	 */
-	public static int nTerminatingReads(SAMFileReader SAMReader, String chromosome, int start, int end, boolean end5p, Strandedness strandedness, boolean isNegativeStrand){
+	public static int nTerminatingReads(SamReader SAMReader, String chromosome, int start, int end, boolean end5p, Strandedness strandedness, boolean isNegativeStrand){
 		SAMRecordIterator sri = SAMReader.query(chromosome, start, end, false);
 
 		int n=0;
@@ -964,7 +964,7 @@ public class BAMTools {
 	 * @param isNegativeStrand
 	 * @return
 	 */
-	public static int nTerminatingReads(SAMFileReader SAMReader, String chromosome, int start, int end, boolean end5p, Strandedness strandedness, boolean isNegativeStrand, int max_hits){
+	public static int nTerminatingReads(SamReader SAMReader, String chromosome, int start, int end, boolean end5p, Strandedness strandedness, boolean isNegativeStrand, int max_hits){
 		SAMRecordIterator sri = SAMReader.query(chromosome, start, end, false);
 
 		int n=0;
@@ -1097,11 +1097,11 @@ public class BAMTools {
 		}
 	}
 
-	public static int nAlignedReads(SAMFileReader sfr, AnnotatedRegion ar, boolean contained){
+	public static int nAlignedReads(SamReader sfr, AnnotatedRegion ar, boolean contained){
 		return nAlignedReads(sfr, ar.chr, ar.start, ar.end, contained);
 	}
 
-	public static int nAlignedReads(SAMFileReader sfr, String chr, int start, int end, boolean contained){
+	public static int nAlignedReads(SamReader sfr, String chr, int start, int end, boolean contained){
 		SAMRecordIterator sri = sfr.query(chr, start, end, contained);
 		int n = 0;
 		while(sri.hasNext()){
@@ -1112,7 +1112,7 @@ public class BAMTools {
 		return n;
 	}
 
-	public static int nAlignedReads(SAMFileReader sfr, String chr, int start, int end, boolean contained, boolean isNegativeStrand){
+	public static int nAlignedReads(SamReader sfr, String chr, int start, int end, boolean contained, boolean isNegativeStrand){
 		SAMRecordIterator sri = sfr.query(chr, start, end, contained);
 		int n=0;
 
@@ -1128,7 +1128,7 @@ public class BAMTools {
 		return n;
 	}
 
-	public static boolean moreThanNAlignedReads(SAMFileReader sfr, String chr, int start, int end, boolean contained, int threshold){
+	public static boolean moreThanNAlignedReads(SamReader sfr, String chr, int start, int end, boolean contained, int threshold){
 		SAMRecordIterator sri = sfr.query(chr, start, end, contained);
 		int n = 0;
 		while(sri.hasNext()){
@@ -1182,7 +1182,7 @@ public class BAMTools {
 	 * @return if the library is stranded, the positive coverage is returned in index-0 of the array, negative coverage in index-1
 	 * 
 	 */
-	public static int[][] coverage(SAMFileReader SAMReader, String chromosome, int start, int end, boolean contained, Strandedness strandedness){
+	public static int[][] coverage(SamReader SAMReader, String chromosome, int start, int end, boolean contained, Strandedness strandedness){
 		SAMRecordIterator sri = SAMReader.query(chromosome, start, end, contained);
 		//		if(!sri.hasNext()){
 		//			sri.close();
@@ -1313,7 +1313,7 @@ public class BAMTools {
 		}
 	}
 
-	public static int[] coverage(SAMFileReader SAMReader, String chromosome, int start, int end, boolean contained, boolean isNegativeStrand){
+	public static int[] coverage(SamReader SAMReader, String chromosome, int start, int end, boolean contained, boolean isNegativeStrand){
 		SAMRecordIterator sri = SAMReader.query(chromosome, start, end, contained);
 		if(!sri.hasNext()){
 			sri.close();
@@ -1369,7 +1369,7 @@ public class BAMTools {
 	 * @param contained
 	 * @return
 	 */
-	public static int[] coverage(SAMFileReader SAMReader, String chromosome, int start, int end, int binSize, boolean contained, boolean isNegativeStrand){
+	public static int[] coverage(SamReader SAMReader, String chromosome, int start, int end, int binSize, boolean contained, boolean isNegativeStrand){
 		//		if(!sri.hasNext()){
 		//			sri.close();
 		//			sri = SAMReader.query(chromosome.substring(3), start, end, contained);
@@ -1413,7 +1413,7 @@ public class BAMTools {
 		return cov;
 	}
 
-	public static int[] coverage(SAMFileReader SAMReader, String chromosome, int start, int end, int binSize, boolean contained){
+	public static int[] coverage(SamReader SAMReader, String chromosome, int start, int end, int binSize, boolean contained){
 		//		if(!sri.hasNext()){
 		//			sri.close();
 		//			sri = SAMReader.query(chromosome.substring(3), start, end, contained);
@@ -1453,7 +1453,7 @@ public class BAMTools {
 		return cov;
 	}
 
-	public static int[] binnedMaxCoverage(SAMFileReader SAMReader, String chromosome, int start, int nBins, int binSize, boolean contained){
+	public static int[] binnedMaxCoverage(SamReader SAMReader, String chromosome, int start, int nBins, int binSize, boolean contained){
 		int[] cov = coverage(SAMReader, chromosome, start, start + (nBins*binSize) - 1, contained);
 		int[] binnedMaxCov = new int[nBins];
 
@@ -1467,17 +1467,17 @@ public class BAMTools {
 		return binnedMaxCov;
 	}
 
-	public static int[] maxBinnedCoverage(SAMFileReader SAMReader, String chromosome, int start, int end, int nBins, boolean contained, boolean isNegativeStrand){
+	public static int[] maxBinnedCoverage(SamReader SAMReader, String chromosome, int start, int end, int nBins, boolean contained, boolean isNegativeStrand){
 		int binSize = (int) Math.ceil((end-start)/((double) nBins));
 		return binnedMaxCoverage(SAMReader, chromosome, start, nBins, binSize, contained, isNegativeStrand);
 	}
 
-	public static int[] maxBinnedCoverage(SAMFileReader SAMReader, String chromosome, int start, int end, int nBins, boolean contained){
+	public static int[] maxBinnedCoverage(SamReader SAMReader, String chromosome, int start, int end, int nBins, boolean contained){
 		int binSize = (int) Math.ceil((end-start)/((double) nBins));
 		return binnedMaxCoverage(SAMReader, chromosome, start, nBins, binSize, contained);
 	}
 
-	public static int[] binnedMaxCoverage(SAMFileReader SAMReader, String chromosome, int start, int nBins, int binSize, boolean contained, boolean isNegativeStrand){
+	public static int[] binnedMaxCoverage(SamReader SAMReader, String chromosome, int start, int nBins, int binSize, boolean contained, boolean isNegativeStrand){
 		int[] cov = coverage(SAMReader, chromosome, start, start + (nBins*binSize) - 1, contained, isNegativeStrand);
 		int[] binnedMaxCov = new int[nBins];
 
@@ -1491,7 +1491,7 @@ public class BAMTools {
 		return binnedMaxCov;
 	}
 
-	public static int[] binnedCoverage(SAMFileReader SAMReader, String chromosome, int start, int nBins, int binSize, boolean contained){
+	public static int[] binnedCoverage(SamReader SAMReader, String chromosome, int start, int nBins, int binSize, boolean contained){
 		//		if(!sri.hasNext()){
 		//			sri.close();
 		//			sri = SAMReader.query(chromosome.substring(3), start, end, contained);
@@ -1532,10 +1532,10 @@ public class BAMTools {
 		return cov;
 	}
 
-	public static int[] binnedCoverage(Collection<SAMFileReader> SAMReaders, String chromosome, int start, int nBins, int binSize, boolean contained){
+	public static int[] binnedCoverage(Collection<SamReader> SAMReaders, String chromosome, int start, int nBins, int binSize, boolean contained){
 		int[] cov = new int[nBins];
 
-		for(SAMFileReader sfr : SAMReaders){
+		for(SamReader sfr : SAMReaders){
 			int[] tCov = binnedCoverage(sfr, chromosome, start, nBins, binSize, contained);
 			for(int i=0; i<tCov.length; i++){
 				cov[i] += tCov[i];
@@ -1545,7 +1545,7 @@ public class BAMTools {
 		return cov;
 	}
 
-	public static int[] binnedCoverage(SAMFileReader SAMReader, String chromosome, int start, int nBins, int binSize, boolean contained, boolean alignmentStart){
+	public static int[] binnedCoverage(SamReader SAMReader, String chromosome, int start, int nBins, int binSize, boolean contained, boolean alignmentStart){
 		//		if(!sri.hasNext()){
 		//			sri.close();
 		//			sri = SAMReader.query(chromosome.substring(3), start, end, contained);
@@ -1579,7 +1579,7 @@ public class BAMTools {
 		return cov;
 	}
 
-	public static int[] binnedStartCoverage(SAMFileReader SAMReader, String chromosome, int start, int nBins, int binSize, boolean contained, boolean alignmentStart){
+	public static int[] binnedStartCoverage(SamReader SAMReader, String chromosome, int start, int nBins, int binSize, boolean contained, boolean alignmentStart){
 		//		if(!sri.hasNext()){
 		//			sri.close();
 		//			sri = SAMReader.query(chromosome.substring(3), start, end, contained);
@@ -1613,7 +1613,7 @@ public class BAMTools {
 		return cov;
 	}
 
-	public static int[] binnedMaxEndCoverage(SAMFileReader SAMReader, String chromosome, int start, int nBins, int binSize, boolean contained){
+	public static int[] binnedMaxEndCoverage(SamReader SAMReader, String chromosome, int start, int nBins, int binSize, boolean contained){
 		//		if(!sri.hasNext()){
 		//			sri.close();
 		//			sri = SAMReader.query(chromosome.substring(3), start, end, contained);
@@ -1661,7 +1661,7 @@ public class BAMTools {
 	 * @param strandedness
 	 * @return if the data is stranded the positive data is in the first position of the array, negative is in the second
 	 */
-	public static int[] binnedMaxEndCoverage(SAMFileReader SAMReader, String chromosome, int start, int nBins, int binSize, boolean contained, Strandedness strandedness, boolean isNegativeStrand){
+	public static int[] binnedMaxEndCoverage(SamReader SAMReader, String chromosome, int start, int nBins, int binSize, boolean contained, Strandedness strandedness, boolean isNegativeStrand){
 		if(strandedness == Strandedness.unstranded){
 			return binnedMaxEndCoverage(SAMReader, chromosome, start, nBins, binSize, contained, strandedness)[0];
 		}
@@ -1670,7 +1670,7 @@ public class BAMTools {
 		}
 	}
 
-	public static int[] binnedMaxEndCoverage(SAMFileReader SAMReader, String chromosome, int start, int nBins, int binSize, boolean contained, boolean unique, Strandedness strandedness, boolean isNegativeStrand){
+	public static int[] binnedMaxEndCoverage(SamReader SAMReader, String chromosome, int start, int nBins, int binSize, boolean contained, boolean unique, Strandedness strandedness, boolean isNegativeStrand){
 		if(strandedness == Strandedness.unstranded){
 			return binnedMaxEndCoverage(SAMReader, chromosome, start, nBins, binSize, contained, unique, strandedness)[0];
 		}
@@ -1689,7 +1689,7 @@ public class BAMTools {
 	 * @param strandedness
 	 * @return if the data is stranded the positive data is in the first position of the array, negative is in the second
 	 */
-	public static int[][] binnedMaxEndCoverage(SAMFileReader SAMReader, String chromosome, int start, int nBins, int binSize, boolean contained, Strandedness strandedness){
+	public static int[][] binnedMaxEndCoverage(SamReader SAMReader, String chromosome, int start, int nBins, int binSize, boolean contained, Strandedness strandedness){
 		int length = nBins*binSize;
 
 		//		if(strandedness == Strandedness.unstranded){
@@ -1774,7 +1774,7 @@ public class BAMTools {
 		throw new RuntimeException("Unimplemented");
 	}
 
-	public static int[][] binnedMaxEndCoverage(SAMFileReader SAMReader, String chromosome, int start, int nBins, int binSize, boolean contained, boolean unique, Strandedness strandedness){
+	public static int[][] binnedMaxEndCoverage(SamReader SAMReader, String chromosome, int start, int nBins, int binSize, boolean contained, boolean unique, Strandedness strandedness){
 		int length = nBins*binSize;
 
 		//		if(strandedness == Strandedness.unstranded){
@@ -1883,7 +1883,7 @@ public class BAMTools {
 		}
 	}
 
-	public static int[][] endCoverage(SAMFileReader SAMReader, String chromosome, int start, int end, Strandedness strandedness, boolean contained, boolean alignmentStart){
+	public static int[][] endCoverage(SamReader SAMReader, String chromosome, int start, int end, Strandedness strandedness, boolean contained, boolean alignmentStart){
 
 		if(strandedness==Strandedness.reverse){
 			int length = end-start+1;
@@ -1948,7 +1948,7 @@ public class BAMTools {
 		}
 	}
 
-	public static int[][] terminalCoverage(SAMFileReader SAMReader, String chromosome, int start, int end, Strandedness strandedness, boolean contained, boolean end5p){
+	public static int[][] terminalCoverage(SamReader SAMReader, String chromosome, int start, int end, Strandedness strandedness, boolean contained, boolean end5p){
 
 		if(strandedness==Strandedness.reverse){
 			int length = end-start+1;
@@ -1999,7 +1999,7 @@ public class BAMTools {
 		}
 	}
 
-	public static int[] binnedEndCoverage(SAMFileReader SAMReader, String chromosome, int start, int nBins, int binSize, boolean contained, boolean alignmentStart){
+	public static int[] binnedEndCoverage(SamReader SAMReader, String chromosome, int start, int nBins, int binSize, boolean contained, boolean alignmentStart){
 		//		if(!sri.hasNext()){
 		//			sri.close();
 		//			sri = SAMReader.query(chromosome.substring(3), start, end, contained);
@@ -2061,7 +2061,7 @@ public class BAMTools {
 		return -1;
 	}
 
-	public static int[] coverage(SAMFileReader SAMReader, String chromosome, int start, int end, boolean contained){
+	public static int[] coverage(SamReader SAMReader, String chromosome, int start, int end, boolean contained){
 		return coverage(SAMReader, chromosome, start, end, contained, false, false, true);
 	}
 
@@ -2080,7 +2080,7 @@ public class BAMTools {
 	 * @return
 	 */
 
-	public static int[] coverage(SAMFileReader SAMReader, String chromosome, int start, int end, boolean contained, boolean isStranded, boolean isNegativeStrand, boolean removeDuplicates){
+	public static int[] coverage(SamReader SAMReader, String chromosome, int start, int end, boolean contained, boolean isStranded, boolean isNegativeStrand, boolean removeDuplicates){
 		SAMRecordIterator sri = SAMReader.query(chromosome, start, end, contained);
 		//		if(!sri.hasNext()){
 		//			sri.close();
@@ -2148,7 +2148,7 @@ public class BAMTools {
 		return n*1./length;
 	}
 
-	public static int getNReads(SAMFileReader SAMReader, String chromosome, int start, int end, boolean contained){
+	public static int getNReads(SamReader SAMReader, String chromosome, int start, int end, boolean contained){
 		SAMRecordIterator sri = SAMReader.query(chromosome.substring(3), start, end, contained);
 
 		int nReads=0;
@@ -2162,7 +2162,7 @@ public class BAMTools {
 		return nReads;
 	}
 
-	public static int getNReads(SAMFileReader SAMReader, String chromosome, int start, int end, boolean contained, boolean isNegativeStrand){
+	public static int getNReads(SamReader SAMReader, String chromosome, int start, int end, boolean contained, boolean isNegativeStrand){
 		SAMRecordIterator sri = SAMReader.query(chromosome.substring(3), start, end, contained);
 		int nReads=0;
 
@@ -2176,7 +2176,7 @@ public class BAMTools {
 		return nReads;
 	}
 
-	public static Iterator<SAMRecord> query(SAMFileReader SAMReader, String chromosome, int start, int end, boolean contained, boolean isNegativeStrand){
+	public static Iterator<SAMRecord> query(SamReader SAMReader, String chromosome, int start, int end, boolean contained, boolean isNegativeStrand){
 		SAMRecordIterator sri = SAMReader.query(chromosome.substring(3), start, end, contained);
 		int nReads=0;
 
@@ -2195,7 +2195,7 @@ public class BAMTools {
 		SAMRecordIterator sri;
 		SAMRecord next;
 
-		public StrandedSAMRecordIterator(SAMFileReader SAMReader, String chromosome, int start, int end, boolean contained, boolean isNegativeStrand) {
+		public StrandedSAMRecordIterator(SamReader SAMReader, String chromosome, int start, int end, boolean contained, boolean isNegativeStrand) {
 			sri = SAMReader.query(chromosome, start, end, contained);
 			next = prepareNext();
 		}
